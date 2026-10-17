@@ -1,3 +1,5 @@
+![](info.png)
+
 # AI Director
 
 A local director's workspace that turns an idea into a storyboard, voiceovers, and animated shots.
