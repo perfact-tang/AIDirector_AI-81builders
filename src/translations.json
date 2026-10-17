@@ -1,0 +1,1502 @@
+{
+  "复制失败，请选择左侧提示词手动复制。": {
+    "en": "Copy failed. Select and copy the prompt manually.",
+    "ja": "コピーできませんでした。左のプロンプトを選択してコピーしてください。"
+  },
+  "预览已更新，点击“保存图片”以保留。": {
+    "en": "Preview updated. Click “Save image” to keep it.",
+    "ja": "プレビューを更新しました。「画像を保存」で保存してください。"
+  },
+  "图片已保存到此浏览器，下载项目 JSON 时也会包含此图片。": {
+    "en": "Image saved in this browser and included when you export the project JSON.",
+    "ja": "画像をブラウザーに保存しました。プロジェクト JSON にも含まれます。"
+  },
+  "人物设定 / 图像提示词": {
+    "en": "Character design / Image prompt",
+    "ja": "キャラクター設定 / 画像プロンプト"
+  },
+  "人物图片": {
+    "en": "Character image",
+    "ja": "キャラクター画像"
+  },
+  "{0} 人物参考图": {
+    "en": "{0} character reference",
+    "ja": "{0} のキャラクター参考画像"
+  },
+  "上传你生成的人物图片": {
+    "en": "Upload your generated character image",
+    "ja": "生成したキャラクター画像をアップロード"
+  },
+  "PNG / JPG / WebP · 最大 10 MB": {
+    "en": "PNG / JPG / WebP · Up to 10 MB",
+    "ja": "PNG / JPG / WebP · 最大 10 MB"
+  },
+  "正在读取…": {
+    "en": "Loading…",
+    "ja": "読み込み中…"
+  },
+  "更换图片": {
+    "en": "Replace image",
+    "ja": "画像を変更"
+  },
+  "上传图片": {
+    "en": "Upload image",
+    "ja": "画像をアップロード"
+  },
+  "上传{0}的人物图片": {
+    "en": "Upload character image for {0}",
+    "ja": "{0} のキャラクター画像をアップロード"
+  },
+  "正在保存…": {
+    "en": "Saving…",
+    "ja": "保存中…"
+  },
+  "保存图片": {
+    "en": "Save image",
+    "ja": "画像を保存"
+  },
+  "图片尚未保存": {
+    "en": "Image not saved yet",
+    "ja": "画像は未保存です"
+  },
+  "已保存 / 已载入图片": {
+    "en": "Image saved / loaded",
+    "ja": "保存済み / 読み込み済み"
+  },
+  "上传后预览，确认后保存至此浏览器。": {
+    "en": "Preview after uploading, then save to this browser.",
+    "ja": "アップロード後に確認し、このブラウザーに保存してください。"
+  },
+  "继续查询 / 处理": {
+    "en": "Resume checking / processing",
+    "ja": "確認 / 処理を再開"
+  },
+  "全部停止": {
+    "en": "Stop all",
+    "ja": "すべて停止"
+  },
+  "停止": {
+    "en": "Stop",
+    "ja": "停止"
+  },
+  "生成已暂停，请查看提示后继续。": {
+    "en": "Generation paused. Review the message before resuming.",
+    "ja": "生成を一時停止しました。メッセージを確認して再開してください。"
+  },
+  "生成中 · 已处理 {0} / {1} 条": {
+    "en": "Generating · Processed {0} / {1}",
+    "ja": "生成中 · {0} / {1} 件処理済み"
+  },
+  "生成进度": {
+    "en": "Generation progress",
+    "ja": "生成の進捗"
+  },
+  "第": {
+    "en": "Item",
+    "ja": "項目"
+  },
+  "条 ·": {
+    "en": "·",
+    "ja": "·"
+  },
+  "等待生成": {
+    "en": "Waiting to generate",
+    "ja": "生成待ち"
+  },
+  "生成中…": {
+    "en": "Generating…",
+    "ja": "生成中…"
+  },
+  "已结束 · 生成完成": {
+    "en": "Finished · Generated",
+    "ja": "終了 · 生成完了"
+  },
+  "已结束 · 生成失败": {
+    "en": "Finished · Failed",
+    "ja": "終了 · 生成失敗"
+  },
+  "停止后不再提交后续镜头。已提交给 ai& 的动画无法取消，将在后台继续处理并保留结果。": {
+    "en": "Stopping prevents further submissions. Videos already submitted to ai& cannot be canceled; they will finish in the background and be saved.",
+    "ja": "停止すると後続の送信を中止します。ai& に送信済みの動画はキャンセルできません。バックグラウンドで処理し、結果を保存します。"
+  },
+  "此文件暂时无法播放，请检查本机文件，或选择其他条目。": {
+    "en": "This file cannot be played. Check the local file or select another item.",
+    "ja": "再生できません。ローカルファイルを確認するか、別の項目を選択してください。"
+  },
+  "连续播放动画": {
+    "en": "Play videos in sequence",
+    "ja": "動画を連続再生"
+  },
+  "连续播放配音": {
+    "en": "Play voiceovers in sequence",
+    "ja": "音声を連続再生"
+  },
+  "关闭播放器": {
+    "en": "Close player",
+    "ja": "プレイヤーを閉じる"
+  },
+  "动画无法读取，请检查本机文件，或选择其他条目。": {
+    "en": "Video unavailable. Check the local file or select another item.",
+    "ja": "動画を読み込めません。ローカルファイルを確認するか、別の項目を選択してください。"
+  },
+  "配音无法读取，请检查本机文件，或选择其他条目。": {
+    "en": "Audio unavailable. Check the local file or select another item.",
+    "ja": "音声を読み込めません。ローカルファイルを確認するか、別の項目を選択してください。"
+  },
+  "点击播放以开始播放。": {
+    "en": "Click Play to start playback.",
+    "ja": "再生ボタンを押してください。"
+  },
+  "全部播放结束": {
+    "en": "Playback complete",
+    "ja": "すべて再生しました"
+  },
+  "正在播放 · 结束后自动播放下一条": {
+    "en": "Playing · Next item plays automatically",
+    "ja": "再生中 · 終了後に次の項目を自動再生"
+  },
+  "已暂停 / 正在准备播放": {
+    "en": "Paused / Preparing playback",
+    "ja": "一時停止中 / 再生を準備中"
+  },
+  "上一条": {
+    "en": "Previous",
+    "ja": "前へ"
+  },
+  "从头播放": {
+    "en": "Play from start",
+    "ja": "最初から再生"
+  },
+  "暂停": {
+    "en": "Pause",
+    "ja": "一時停止"
+  },
+  "播放": {
+    "en": "Play",
+    "ja": "再生"
+  },
+  "下一条": {
+    "en": "Next",
+    "ja": "次へ"
+  },
+  "播放列表": {
+    "en": "Playlist",
+    "ja": "再生リスト"
+  },
+  "条": {
+    "en": "items",
+    "ja": "件"
+  },
+  "当前": {
+    "en": "Current",
+    "ja": "再生対象"
+  },
+  "正在恢复任务进度": {
+    "en": "Restoring task progress",
+    "ja": "タスクの進捗を復元中"
+  },
+  "正在连接本地服务，读取此任务的最新执行状态。": {
+    "en": "Connecting to the local service to retrieve the latest task status.",
+    "ja": "ローカルサービスに接続して、タスクの最新状態を取得しています。"
+  },
+  "正在提交创作需求": {
+    "en": "Submitting your brief",
+    "ja": "制作内容を送信中"
+  },
+  "正在将画风、镜头节奏和你的灵感发送给导演。": {
+    "en": "Sending your visual style, shot pace and idea to the director.",
+    "ja": "画風、カットのテンポ、アイデアを AI ディレクターに送信しています。"
+  },
+  "正在读取本地 skill": {
+    "en": "Loading the local skill",
+    "ja": "ローカル skill を読み込み中"
+  },
+  "正在加载导演规范、角色设定要求、分镜协议与项目模板。": {
+    "en": "Loading direction guidelines, character requirements, storyboard rules and project templates.",
+    "ja": "演出ルール、キャラクター設定、絵コンテ仕様、テンプレートを読み込んでいます。"
+  },
+  "正在调用模型编写导演方案": {
+    "en": "Writing the production plan with AI",
+    "ja": "AI が制作プランを作成中"
+  },
+  "AI 正在根据你的需求编写完整方案，包含视觉风格、人物、声音设计和逐镜头提示词。": {
+    "en": "AI is writing your visual style, characters, sound design and prompts for every shot.",
+    "ja": "AI が画風、キャラクター、音声設計、各カットのプロンプトを作成しています。"
+  },
+  "正在校验人物、声音与分镜数据": {
+    "en": "Validating characters, audio and storyboard",
+    "ja": "キャラクター・音声・絵コンテを検証中"
+  },
+  "正在运行项目校验器，检查角色设定、声音计划、镜头结构与时长。": {
+    "en": "Checking character designs, audio plans, shot structure and durations.",
+    "ja": "キャラクター設定、音声プラン、カット構成、長さを検証しています。"
+  },
+  "生成完成": {
+    "en": "Generation complete",
+    "ja": "生成完了"
+  },
+  "方案已通过校验，即将打开创建方案。": {
+    "en": "Plan validated. Opening your project.",
+    "ja": "検証が完了しました。プロジェクトを開きます。"
+  },
+  "创作暂时中断": {
+    "en": "Creation interrupted",
+    "ja": "制作が中断されました"
+  },
+  "AI 导演正在工作": {
+    "en": "Your AI director is working",
+    "ja": "AI ディレクターが制作中"
+  },
+  "你的输入仍然保留，可以返回调整或重新连接任务。": {
+    "en": "Your input is saved. Go back to edit it or reconnect to this task.",
+    "ja": "入力は保持されています。内容を編集するか、タスクに再接続できます。"
+  },
+  "从灵感到镜头，正在为你组织完整的创作方案。": {
+    "en": "Turning your idea into a complete production plan.",
+    "ja": "アイデアをもとに、制作プランを組み立てています。"
+  },
+  "已用": {
+    "en": "Elapsed",
+    "ja": "経過時間"
+  },
+  "需要处理": {
+    "en": "Action needed",
+    "ja": "対応が必要です"
+  },
+  "当前阶段": {
+    "en": "Current stage",
+    "ja": "現在の処理"
+  },
+  "修正": {
+    "en": "Correction",
+    "ja": "修正"
+  },
+  "发现了需要调整的结构，AI 正在根据校验反馈修正完整方案。": {
+    "en": "AI is revising the plan based on validation feedback.",
+    "ja": "検証結果に基づき、AI がプランの構成を修正しています。"
+  },
+  "正在处理创作需求。": {
+    "en": "Processing your brief.",
+    "ja": "制作内容を処理しています。"
+  },
+  "实际处理记录": {
+    "en": "Task activity",
+    "ja": "処理履歴"
+  },
+  "现在": {
+    "en": "Now",
+    "ja": "現在"
+  },
+  "返回修改需求": {
+    "en": "Back to brief",
+    "ja": "制作内容の編集に戻る"
+  },
+  "重新连接任务": {
+    "en": "Reconnect to task",
+    "ja": "タスクに再接続"
+  },
+  "生成可能需要数分钟。完成后将自动进入方案页，你也可以刷新此页继续查看。": {
+    "en": "Generation may take a few minutes. Your project opens automatically when ready. You can refresh this page to keep checking.",
+    "ja": "生成には数分かかることがあります。完了後にプロジェクトを開きます。ページを更新しても進捗を確認できます。"
+  },
+  "阶段记录来自实际执行状态；模型生成期间暂不提供内部逐步进度。": {
+    "en": "Stages reflect actual task status. Detailed internal model progress is not available.",
+    "ja": "実際の処理状態を表示しています。モデル内部の詳細な進捗は表示されません。"
+  },
+  "已读取项目存档": {
+    "en": "Project archive loaded",
+    "ja": "プロジェクトを読み込み済み"
+  },
+  "校验通过": {
+    "en": "Validation passed",
+    "ja": "検証済み"
+  },
+  "秒 ·": {
+    "en": "sec ·",
+    "ja": "秒 ·"
+  },
+  "位人物 ·": {
+    "en": "characters ·",
+    "ja": "人のキャラクター ·"
+  },
+  "个镜头": {
+    "en": "shots",
+    "ja": "カット"
+  },
+  "保存项目 JSON ↗": {
+    "en": "Save project JSON ↗",
+    "ja": "プロジェクト JSON を保存 ↗"
+  },
+  "项目 JSON 保存修改记录、图片、配音与动画路径；动画文件仍位于本机，请同时下载动画 ZIP 备份。": {
+    "en": "Project JSON includes edits, images, audio and video paths. Videos remain on this computer; download the video ZIP as a backup.",
+    "ja": "JSON に編集内容・画像・音声・動画のパスを保存します。動画本体はこの PC に残るため、ZIP もダウンロードして保管してください。"
+  },
+  "项目视图": {
+    "en": "Project views",
+    "ja": "プロジェクト表示"
+  },
+  "人物展示": {
+    "en": "Characters",
+    "ja": "キャラクター"
+  },
+  "声音设计": {
+    "en": "Sound design",
+    "ja": "音声設計"
+  },
+  "分镜展示": {
+    "en": "Storyboard",
+    "ja": "絵コンテ"
+  },
+  "此项目没有跨镜头人物。": {
+    "en": "This project has no recurring characters.",
+    "ja": "このプロジェクトには共通キャラクターがありません。"
+  },
+  "完整项目 JSON": {
+    "en": "Full project JSON",
+    "ja": "プロジェクト JSON 全体"
+  },
+  "正在上传素材并提交": {
+    "en": "Uploading media and submitting",
+    "ja": "素材をアップロードして送信中"
+  },
+  "正在审核提示词与素材": {
+    "en": "Reviewing prompts and media",
+    "ja": "プロンプトと素材を審査中"
+  },
+  "正在准备模型提示词": {
+    "en": "Preparing model prompts",
+    "ja": "モデル用プロンプトを準備中"
+  },
+  "已排队，等待生成": {
+    "en": "Queued for generation",
+    "ja": "生成キューで待機中"
+  },
+  "正在生成动画": {
+    "en": "Generating video",
+    "ja": "動画を生成中"
+  },
+  "生成失败": {
+    "en": "Generation failed",
+    "ja": "生成失敗"
+  },
+  "任务已结束": {
+    "en": "Task ended",
+    "ja": "タスク終了"
+  },
+  "提交状态待确认，请先检查 ai& 控制台": {
+    "en": "Submission unconfirmed. Check the ai& console first.",
+    "ja": "送信状況が不明です。先に ai& コンソールを確認してください。"
+  },
+  "已停止后续生成。已提交的动画仍会继续处理，结果将自动保留。": {
+    "en": "Further generation stopped. Submitted videos will keep processing and their results will be saved.",
+    "ja": "後続の生成を停止しました。送信済みの動画は処理を続け、結果を保存します。"
+  },
+  "本地保存失败：": {
+    "en": "Local save failed: ",
+    "ja": "ローカル保存に失敗しました："
+  },
+  "视频参数无效，请调整后重试。": {
+    "en": "Invalid video settings. Adjust them and try again.",
+    "ja": "動画の設定が無効です。修正して再試行してください。"
+  },
+  "视频提交失败。": {
+    "en": "Video submission failed.",
+    "ja": "動画の送信に失敗しました。"
+  },
+  "无法读取视频任务。": {
+    "en": "Unable to retrieve the video task.",
+    "ja": "動画タスクを取得できません。"
+  },
+  "提交结果不确定，已暂停后续生成。请先在 ai& 控制台核对，避免重复扣费。": {
+    "en": "Submission is uncertain. Further generation paused. Check the ai& console to avoid duplicate charges.",
+    "ja": "送信結果が不明のため後続の生成を停止しました。重複課金を避けるため、先に ai& コンソールを確認してください。"
+  },
+  "本镜头生成失败：{0}": {
+    "en": "Shot generation failed: {0}",
+    "ja": "このカットの生成に失敗しました：{0}"
+  },
+  "请调整后重试。": {
+    "en": "Adjust and try again.",
+    "ja": "修正して再試行してください。"
+  },
+  "本镜头已处理完成。": {
+    "en": "Shot processing complete.",
+    "ja": "このカットの処理が完了しました。"
+  },
+  "连接中断：": {
+    "en": "Connection interrupted: ",
+    "ja": "接続が中断されました："
+  },
+  "。可继续查询或停止后续生成。": {
+    "en": ". Resume checking or stop further generation.",
+    "ja": "。確認を再開するか、後続の生成を停止してください。"
+  },
+  "。点击“继续查询 / 处理”，会复用原任务编号。": {
+    "en": ". Click “Resume checking / processing” to reuse the existing task ID.",
+    "ja": "。「確認 / 処理を再開」で同じタスク ID を再利用します。"
+  },
+  "本地任务记录不存在。已保留编号与路径，请检查原电脑的 .local/videos 文件。": {
+    "en": "Local task record missing. ID and path retained. Check .local/videos on the original computer.",
+    "ja": "ローカルのタスク記録がありません。ID とパスは保持しています。元の PC の .local/videos を確認してください。"
+  },
+  "镜头 {0}": {
+    "en": "Shot {0}",
+    "ja": "カット {0}"
+  },
+  "已加入 {0} 个镜头，依次生成。": {
+    "en": "Added {0} shots for sequential generation.",
+    "ja": "{0} カットを順番に生成します。"
+  },
+  "已使用当前配音修复最终音轨，画面未重新生成，不产生视频生成费用。": {
+    "en": "Original narration restored without regenerating video. No video generation charge.",
+    "ja": "映像を再生成せずに、現在の音声で音声トラックを修復しました。動画生成料金はかかりません。"
+  },
+  "▶ 播放全部生成的动画": {
+    "en": "▶ Play all generated videos",
+    "ja": "▶ 生成済みの動画をすべて再生"
+  },
+  "如何生成全部动画？": {
+    "en": "How would you like to generate videos?",
+    "ja": "動画の生成方法を選択"
+  },
+  "取消": {
+    "en": "Cancel",
+    "ja": "キャンセル"
+  },
+  "请选择本次生成方式。旧动画会保留至新版本生成成功。": {
+    "en": "Choose a generation mode. Previous videos stay available until replacements succeed.",
+    "ja": "生成方法を選択してください。新しい動画が完成するまで、以前の動画を保持します。"
+  },
+  "继续生成": {
+    "en": "Continue generation",
+    "ja": "生成を続ける"
+  },
+  "保留以往内容，生成未完成或已修改的": {
+    "en": "Keep previous results and generate the remaining or edited",
+    "ja": "既存の結果を保持し、未完了または変更済みの"
+  },
+  "条镜头。": {
+    "en": "shots.",
+    "ja": "カットを生成します。"
+  },
+  "从头重新生成": {
+    "en": "Regenerate from scratch",
+    "ja": "最初から再生成"
+  },
+  "重新生成全部": {
+    "en": "Regenerate all",
+    "ja": "生成可能なすべての"
+  },
+  "条可生成镜头，将产生新的生成费用。": {
+    "en": "eligible shots. New generation charges apply.",
+    "ja": "カットを再生成します。新たに生成料金がかかります。"
+  },
+  "预计 {0} {1}。": {
+    "en": "Estimated {0} {1}.",
+    "ja": "概算 {0} {1}。"
+  },
+  "动画生成中": {
+    "en": "Generating videos",
+    "ja": "動画を生成中"
+  },
+  "动画工作台": {
+    "en": "Animation studio",
+    "ja": "動画ワークスペース"
+  },
+  "MiniMax H3 · 配音优先 · 人物自动匹配 · 768p": {
+    "en": "MiniMax H3 · Voice-led · Auto character matching · 768p",
+    "ja": "MiniMax H3 · 音声優先 · キャラクター自動照合 · 768p"
+  },
+  "动画画幅": {
+    "en": "Video aspect ratio",
+    "ja": "動画のアスペクト比"
+  },
+  "正在生成动画…": {
+    "en": "Generating videos…",
+    "ja": "動画を生成中…"
+  },
+  "生成全部动画": {
+    "en": "Generate all videos",
+    "ja": "動画をすべて生成"
+  },
+  "正在打包…": {
+    "en": "Packaging…",
+    "ja": "ZIP を作成中…"
+  },
+  "下载已生成动画（ZIP）": {
+    "en": "Download generated videos (ZIP)",
+    "ja": "生成済み動画をダウンロード（ZIP）"
+  },
+  "当前报价 {0} {1} / 秒；待生成 {2} 条，预计 {3} {4}。": {
+    "en": "Rate: {0} {1} / sec; {2} pending, estimated {3} {4}.",
+    "ja": "料金 {0} {1} / 秒；未生成 {2} 件、概算 {3} {4}。"
+  },
+  "正在读取账户视频报价。": {
+    "en": "Loading video pricing.",
+    "ja": "動画の料金を取得中。"
+  },
+  "仅为配音与所需人物图片齐全的镜头生成。提交后无法取消；已完成且未修改的镜头会跳过。": {
+    "en": "Only shots with narration and required images can be generated. Submitted tasks cannot be canceled. Completed, unchanged shots are skipped.",
+    "ja": "音声と必要な画像が揃ったカットのみ生成します。送信後はキャンセルできません。完了済みで変更のないカットはスキップします。"
+  },
+  " ZIP 同时包含仍保留的旧版本动画。": {
+    "en": " ZIP also includes retained older videos.",
+    "ja": " ZIP には保持されている旧版の動画も含まれます。"
+  },
+  "请先在 ai& 控制台 Playground 接受视频服务条款，然后": {
+    "en": "Accept the video service terms in the ai& Playground first, then",
+    "ja": "ai& Playground で動画サービスの利用規約に同意してから、"
+  },
+  "重新检查权限": {
+    "en": "Check access again",
+    "ja": "利用権限を再確認"
+  },
+  "批量任务剩余 {0} 条。 ": {
+    "en": "{0} shots remaining. ",
+    "ja": "残り {0} カット。"
+  },
+  "搜索镜头、人物或提示词…": {
+    "en": "Search shots, characters or prompts…",
+    "ja": "カット・キャラクター・プロンプトを検索…"
+  },
+  "搜索分镜": {
+    "en": "Search storyboard",
+    "ja": "絵コンテを検索"
+  },
+  "{0}动画时长": {
+    "en": "{0} video duration",
+    "ja": "{0} の動画の長さ"
+  },
+  "秒": {
+    "en": "sec",
+    "ja": "秒"
+  },
+  "重新生成动画": {
+    "en": "Regenerate video",
+    "ja": "動画を再生成"
+  },
+  "生成动画": {
+    "en": "Generate video",
+    "ja": "動画を生成"
+  },
+  "分镜提示词": {
+    "en": "Shot prompt",
+    "ja": "動画プロンプト"
+  },
+  "首帧提示词": {
+    "en": "First-frame prompt",
+    "ja": "開始フレームのプロンプト"
+  },
+  "请将首帧提示词缩短至 800 字以内。": {
+    "en": "Shorten the first-frame prompt to 800 characters.",
+    "ja": "開始フレームのプロンプトを 800 文字以内にしてください。"
+  },
+  "更换场景参考图": {
+    "en": "Replace scene reference",
+    "ja": "シーン参考画像を変更"
+  },
+  "上传场景参考图（可选）": {
+    "en": "Upload scene reference (optional)",
+    "ja": "シーン参考画像をアップロード（任意）"
+  },
+  "上传{0}场景参考图": {
+    "en": "Upload scene reference for {0}",
+    "ja": "{0} のシーン参考画像をアップロード"
+  },
+  "{0}首帧参考": {
+    "en": "{0} first-frame reference",
+    "ja": "{0} の開始フレーム参考画像"
+  },
+  "移除图片": {
+    "en": "Remove image",
+    "ja": "画像を削除"
+  },
+  "本次生成参考": {
+    "en": "Generation references",
+    "ja": "今回の生成に使う素材"
+  },
+  "✓ 当前镜头配音已就绪（主要参考）": {
+    "en": "✓ Current narration ready (primary reference)",
+    "ja": "✓ このカットの音声を準備済み（主な参考素材）"
+  },
+  "○ 请先生成当前镜头配音": {
+    "en": "○ Generate narration for this shot first",
+    "ja": "○ 先にこのカットの音声を生成してください"
+  },
+  "人物：": {
+    "en": "Characters: ",
+    "ja": "キャラクター："
+  },
+  "未在分镜提示词中识别到人物": {
+    "en": "No character names found in the shot prompt",
+    "ja": "動画プロンプトにキャラクター名が見つかりません"
+  },
+  "{0} 自动匹配参考图": {
+    "en": "{0} matched reference image",
+    "ja": "{0} の自動照合された参考画像"
+  },
+  "缺少图片": {
+    "en": "Image missing",
+    "ja": "画像がありません"
+  },
+  "生成时使用的有效提示词（图片优先）": {
+    "en": "Effective generation prompt (image priority)",
+    "ja": "実際に使用するプロンプト（画像優先）"
+  },
+  "先使用已生成的配音，再附上提示词中人物的已保存图片。无人物镜头需上传场景参考图；画面、口型和动作节奏以配音为主。": {
+    "en": "Uses generated narration first, plus saved images of characters named in the prompt. Shots without characters need a scene image. Visuals, lip sync and motion follow the narration.",
+    "ja": "生成済みの音声を主に参照し、プロンプト内のキャラクターの保存済み画像を添付します。人物のいないカットにはシーン画像が必要です。映像・口の動き・動作のテンポは音声を優先します。"
+  },
+  "动画路径暂不可用，请检查原电脑的 .local/videos 文件；导入不会自动重新生成。": {
+    "en": "Video unavailable. Check .local/videos on the original computer. Importing does not regenerate it.",
+    "ja": "動画を読み込めません。元の PC の .local/videos を確認してください。読み込み時に自動再生成はしません。"
+  },
+  "正在处理视频任务": {
+    "en": "Processing video task",
+    "ja": "動画タスクを処理中"
+  },
+  "生成后的动画将在这里展示": {
+    "en": "Your generated video will appear here",
+    "ja": "生成した動画をここに表示します"
+  },
+  "查询暂时失败，将继续查询：": {
+    "en": "Status check failed; retrying: ",
+    "ja": "状態の確認に失敗しました。再試行します："
+  },
+  "提示词、素材或设置已修改，当前为上次生成结果。": {
+    "en": "Prompts, media or settings changed. Showing the previous result.",
+    "ja": "プロンプト・素材・設定が変更されています。前回の結果を表示しています。"
+  },
+  "✓ 最终音轨已锁定原始配音": {
+    "en": "✓ Final audio locked to original narration",
+    "ja": "✓ 最終音声に元の音声を使用しています"
+  },
+  "此旧动画尚未锁定原始配音": {
+    "en": "This older video does not use the original narration yet",
+    "ja": "この旧版の動画には元の音声が適用されていません"
+  },
+  "正在修复音轨…": {
+    "en": "Restoring audio…",
+    "ja": "音声を修復中…"
+  },
+  "使用当前配音修复音轨（免费）": {
+    "en": "Restore current narration (free)",
+    "ja": "現在の音声で修復（無料）"
+  },
+  "实际提交的素材记录": {
+    "en": "Submitted media record",
+    "ja": "実際に送信した素材の記録"
+  },
+  "下载 MP4": {
+    "en": "Download MP4",
+    "ja": "MP4 をダウンロード"
+  },
+  "当前项目没有分镜。": {
+    "en": "This project has no shots.",
+    "ja": "このプロジェクトにはカットがありません。"
+  },
+  "部分已保存配音无法读取，请检查本机音频文件。": {
+    "en": "Some saved voiceovers could not be read. Check local audio files.",
+    "ja": "一部の保存済み音声を読み込めません。ローカルの音声ファイルを確認してください。"
+  },
+  "无法加载 Edge TTS 音色，请确认后端已启动。": {
+    "en": "Cannot load Edge TTS voices. Check that the backend is running.",
+    "ja": "Edge TTS の音声一覧を取得できません。バックエンドの起動を確認してください。"
+  },
+  "正在生成 {0}/{1} · {2}": {
+    "en": "Generating {0}/{1} · {2}",
+    "ja": "生成中 {0}/{1} · {2}"
+  },
+  "镜头 ": {
+    "en": "Shot ",
+    "ja": "カット "
+  },
+  "配音生成失败。": {
+    "en": "Voice generation failed.",
+    "ja": "音声の生成に失敗しました。"
+  },
+  "音频读取失败，请重试。": {
+    "en": "Failed to read audio. Try again.",
+    "ja": "音声の読み込みに失敗しました。再試行してください。"
+  },
+  "音频保存失败。": {
+    "en": "Failed to save audio.",
+    "ja": "音声の保存に失敗しました。"
+  },
+  "{0}：成功 {1} 条{2}。": {
+    "en": "{0}: {1} succeeded{2}.",
+    "ja": "{0}：{1} 件成功{2}。"
+  },
+  "配音已停止": {
+    "en": "Voice generation stopped",
+    "ja": "音声生成を停止しました"
+  },
+  "配音处理完成": {
+    "en": "Voice processing complete",
+    "ja": "音声処理が完了しました"
+  },
+  "，失败 {0} 条，可逐条重试": {
+    "en": ", {0} failed; retry individually",
+    "ja": "、{0} 件失敗。個別に再試行できます"
+  },
+  "▶ 播放全部生成的配音": {
+    "en": "▶ Play all generated voiceovers",
+    "ja": "▶ 生成済みの音声をすべて再生"
+  },
+  "配音生成中": {
+    "en": "Generating voiceovers",
+    "ja": "音声を生成中"
+  },
+  "配音工作台": {
+    "en": "Voiceover studio",
+    "ja": "音声ワークスペース"
+  },
+  "编辑台词后生成 MP3，或使用设备语音快速朗读。": {
+    "en": "Edit dialogue to generate MP3s, or preview it with device speech.",
+    "ja": "台詞を編集して MP3 を生成するか、端末の音声で試聴できます。"
+  },
+  "Edge TTS 配音音色": {
+    "en": "Edge TTS voice",
+    "ja": "Edge TTS の音声"
+  },
+  "正在生成配音…": {
+    "en": "Generating voiceovers…",
+    "ja": "音声を生成中…"
+  },
+  "生成全部配音": {
+    "en": "Generate all voiceovers",
+    "ja": "音声をすべて生成"
+  },
+  "下载已生成配音（ZIP）": {
+    "en": "Download generated voiceovers (ZIP)",
+    "ja": "生成済み音声をダウンロード（ZIP）"
+  },
+  "Edge TTS 将台词发送至 Microsoft 在线语音服务。生成音频不自动匹配镜头时长。": {
+    "en": "Edge TTS sends dialogue to Microsoft's online speech service. Audio is not automatically fitted to shot duration.",
+    "ja": "Edge TTS は台詞を Microsoft のオンライン音声サービスに送信します。音声の長さはカットの長さに自動調整されません。"
+  },
+  "朗读语言": {
+    "en": "Read-aloud language",
+    "ja": "読み上げ言語"
+  },
+  "▶ 全部朗读": {
+    "en": "▶ Read all",
+    "ja": "▶ すべて読み上げ"
+  },
+  "继续": {
+    "en": "Resume",
+    "ja": "再開"
+  },
+  "台词与生成音频会自动保存到当前浏览器。": {
+    "en": "Dialogue and generated audio are saved automatically in this browser.",
+    "ja": "台詞と生成した音声は、このブラウザーに自動保存されます。"
+  },
+  "当前浏览器不支持设备语音朗读。": {
+    "en": "This browser does not support device speech.",
+    "ja": "このブラウザーは端末の読み上げに対応していません。"
+  },
+  "请下载项目 JSON 备份。": {
+    "en": "Download project JSON as a backup.",
+    "ja": "プロジェクト JSON をダウンロードして保管してください。"
+  },
+  "生成配音": {
+    "en": "Generate voiceover",
+    "ja": "音声を生成"
+  },
+  "■ 停止朗读": {
+    "en": "■ Stop reading",
+    "ja": "■ 読み上げを停止"
+  },
+  "▶ 逐条朗读": {
+    "en": "▶ Read this item",
+    "ja": "▶ 個別に読み上げ"
+  },
+  "台词 / 旁白": {
+    "en": "Dialogue / Narration",
+    "ja": "台詞 / ナレーション"
+  },
+  "输入此镜头的台词或旁白；留空则跳过配音。": {
+    "en": "Enter dialogue or narration for this shot. Leave blank to skip.",
+    "ja": "このカットの台詞やナレーションを入力してください。空欄の場合は音声生成をスキップします。"
+  },
+  "音频路径不可用，请检查原电脑的 .local/audio 文件。导入不会自动重新生成。": {
+    "en": "Audio unavailable. Check .local/audio on the original computer. Importing does not regenerate it.",
+    "ja": "音声を読み込めません。元の PC の .local/audio を確認してください。読み込み時に自動再生成はしません。"
+  },
+  "下载 MP3": {
+    "en": "Download MP3",
+    "ja": "MP3 をダウンロード"
+  },
+  "台词或音色已修改，当前为旧音频，请重新生成。": {
+    "en": "Dialogue or voice changed. This is an older recording; regenerate it.",
+    "ja": "台詞または音声が変更されています。現在は以前の音声です。再生成してください。"
+  },
+  "已生成 · {0}": {
+    "en": "Generated · {0}",
+    "ja": "生成済み · {0}"
+  },
+  "当前项目没有可配音镜头。": {
+    "en": "This project has no voiceover shots.",
+    "ja": "このプロジェクトには音声を生成できるカットがありません。"
+  },
+  "无法打开浏览器本地存储。": {
+    "en": "Cannot open browser storage.",
+    "ja": "ブラウザーのローカルストレージを開けません。"
+  },
+  "本地保存失败，请检查浏览器存储空间。": {
+    "en": "Local save failed. Check browser storage space.",
+    "ja": "ローカル保存に失敗しました。ブラウザーの空き容量を確認してください。"
+  },
+  "请选择 PNG、JPG 或 WebP 图片。": {
+    "en": "Choose a PNG, JPG or WebP image.",
+    "ja": "PNG、JPG、WebP の画像を選択してください。"
+  },
+  "图片不能超过 10 MB。": {
+    "en": "Images must be 10 MB or smaller.",
+    "ja": "画像は 10 MB 以下にしてください。"
+  },
+  "图片读取失败。": {
+    "en": "Failed to read image.",
+    "ja": "画像の読み込みに失敗しました。"
+  },
+  "无法识别此图片，请重新选择。": {
+    "en": "Invalid image. Choose another file.",
+    "ja": "画像を認識できません。別のファイルを選択してください。"
+  },
+  "还没有已生成的文件。": {
+    "en": "No generated files yet.",
+    "ja": "生成済みのファイルがありません。"
+  },
+  "正在打包 {0}/{1}": {
+    "en": "Packaging {0}/{1}",
+    "ja": "ZIP 作成中 {0}/{1}"
+  },
+  "无法读取 {0}，请确认本地服务正在运行。": {
+    "en": "Cannot read {0}. Check that the local service is running.",
+    "ja": "{0} を読み込めません。ローカルサービスの起動を確認してください。"
+  },
+  "本次文件超过 512 MB，请分批下载单个文件。": {
+    "en": "Files exceed 512 MB. Download individual files in smaller batches.",
+    "ja": "合計が 512 MB を超えています。個別にダウンロードしてください。"
+  },
+  "已打包 {0} 个文件。": {
+    "en": "Packaged {0} files.",
+    "ja": "{0} ファイルを ZIP にまとめました。"
+  },
+  "真实 3D": {
+    "en": "Realistic 3D",
+    "ja": "リアル 3D"
+  },
+  "电影质感，真实光影": {
+    "en": "Cinematic detail, lifelike lighting",
+    "ja": "映画のような質感とリアルな光"
+  },
+  "日本动漫": {
+    "en": "Japanese anime",
+    "ja": "日本のアニメ"
+  },
+  "细腻笔触，想象无限": {
+    "en": "Delicate lines, limitless imagination",
+    "ja": "繊細なタッチ、広がる想像力"
+  },
+  "2.5D 效果": {
+    "en": "2.5D style",
+    "ja": "2.5D スタイル"
+  },
+  "平面与立体之间": {
+    "en": "Between flat and dimensional",
+    "ja": "平面と立体のあいだ"
+  },
+  "导演台": {
+    "en": "Director's desk",
+    "ja": "ディレクターズデスク"
+  },
+  "AI 处理中": {
+    "en": "AI processing",
+    "ja": "AI 処理中"
+  },
+  "创建方案": {
+    "en": "Production plan",
+    "ja": "制作プラン"
+  },
+  "此浏览器中没有该项目存档，请重新读取 JSON 文件。": {
+    "en": "No project archive found in this browser. Import the JSON file again.",
+    "ja": "このブラウザーに保存データがありません。JSON を再度読み込んでください。"
+  },
+  "项目 JSON 超过 100 MB，请使用不内嵌大型视频的存档。": {
+    "en": "Project JSON exceeds 100 MB. Use an archive without embedded large videos.",
+    "ja": "プロジェクト JSON が 100 MB を超えています。大きな動画を含まないファイルを使用してください。"
+  },
+  "JSON 文件无法解析，请选择有效的项目 JSON。": {
+    "en": "Cannot parse JSON. Choose a valid project JSON file.",
+    "ja": "JSON を解析できません。有効なプロジェクト JSON を選択してください。"
+  },
+  "先写下你的故事或灵感。": {
+    "en": "Write your story or idea first.",
+    "ja": "まずストーリーやアイデアを入力してください。"
+  },
+  "AI Director 首页": {
+    "en": "AI Director home",
+    "ja": "AI Director ホーム"
+  },
+  "你的想象，": {
+    "en": "Your imagination, ",
+    "ja": "あなたの想像が、"
+  },
+  "即将开拍。": {
+    "en": "ready for action.",
+    "ja": "いま、動き出す。"
+  },
+  "设定画面与节奏，把故事的第一步交给灵感。": {
+    "en": "Set the look and pace. Let your idea take the first step.",
+    "ja": "画風とテンポを決めて、アイデアから制作を始めましょう。"
+  },
+  "继续已有项目": {
+    "en": "Continue a project",
+    "ja": "既存のプロジェクトを開く"
+  },
+  "读取已保存的 JSON，恢复修改、配音与动画，无需重新生成。": {
+    "en": "Load saved JSON to restore edits, voiceovers and videos without regenerating.",
+    "ja": "保存した JSON から編集・音声・動画を復元できます。再生成は不要です。"
+  },
+  "读取项目 JSON ↗": {
+    "en": "Load project JSON ↗",
+    "ja": "プロジェクト JSON を開く ↗"
+  },
+  "读取项目 JSON": {
+    "en": "Load project JSON",
+    "ja": "プロジェクト JSON を開く"
+  },
+  "查看正在处理的任务 →": {
+    "en": "View running task →",
+    "ja": "処理中のタスクを確認 →"
+  },
+  "选择画风": {
+    "en": "Choose a visual style",
+    "ja": "画風を選ぶ"
+  },
+  "为你的故事定下视觉基调": {
+    "en": "Set the visual tone for your story",
+    "ja": "ストーリーのビジュアルを決める"
+  },
+  "画风选择": {
+    "en": "Visual style",
+    "ja": "画風の選択"
+  },
+  "设定节奏": {
+    "en": "Set the pace",
+    "ja": "テンポを決める"
+  },
+  "每个镜头的呼吸感": {
+    "en": "Give each shot its rhythm",
+    "ja": "カットごとのリズム"
+  },
+  "动画节奏": {
+    "en": "Animation pace",
+    "ja": "動画のテンポ"
+  },
+  "快节奏": {
+    "en": "Fast pace",
+    "ja": "速いテンポ"
+  },
+  "慢节奏": {
+    "en": "Slow pace",
+    "ja": "ゆっくりしたテンポ"
+  },
+  "紧凑切换，瞬间抓住注意力": {
+    "en": "Quick cuts that grab attention",
+    "ja": "テンポのよい切り替えで引き込む"
+  },
+  "从容叙事，让情绪慢慢发生": {
+    "en": "Let the story and emotions unfold",
+    "ja": "物語と感情をじっくり描く"
+  },
+  "秒 / 镜头": {
+    "en": "sec / shot",
+    "ja": "秒 / カット"
+  },
+  "写下你的灵感": {
+    "en": "Write your idea",
+    "ja": "アイデアを書く"
+  },
+  "故事、歌词、一个念头，都可以": {
+    "en": "A story, lyrics, or just a thought",
+    "ja": "ストーリー、歌詞、ふとしたひらめきでも"
+  },
+  "故事从哪里开始？\n\n可以是一段故事、一首歌词，或是一个还没成形的想法……": {
+    "en": "Where does your story begin?\n\nA story, lyrics, or an idea still taking shape…",
+    "ja": "物語はどこから始まりますか？\n\nストーリーや歌詞、まだ形にならないアイデアでもかまいません…"
+  },
+  "让想象自由一点": {
+    "en": "Let your imagination run free",
+    "ja": "自由に想像を広げて"
+  },
+  "草稿自动保存在此浏览器": {
+    "en": "Draft saved automatically in this browser",
+    "ja": "下書きはこのブラウザーに自動保存されます"
+  },
+  "正在提交创作需求…": {
+    "en": "Submitting your brief…",
+    "ja": "制作内容を送信中…"
+  },
+  "让我来帮你想脚本": {
+    "en": "Help me write a script",
+    "ja": "脚本づくりを手伝って"
+  },
+  "读取项目存档": {
+    "en": "Load project archive",
+    "ja": "プロジェクトの保存データを開く"
+  },
+  "正在从本地浏览器恢复项目，不会调用生成服务。": {
+    "en": "Restoring from this browser. No generation service will be called.",
+    "ja": "ブラウザーから復元しています。生成サービスは呼び出しません。"
+  },
+  "返回读取 JSON": {
+    "en": "Back to JSON import",
+    "ja": "JSON の読み込みに戻る"
+  },
+  "PRODUCTION / 创建方案": {
+    "en": "PRODUCTION / Production plan",
+    "ja": "PRODUCTION / 制作プラン"
+  },
+  "← 返回修改需求": {
+    "en": "← Back to brief",
+    "ja": "← 制作内容の編集に戻る"
+  },
+  "查看创作需求": {
+    "en": "View creative brief",
+    "ja": "制作内容を確認"
+  },
+  "从灵感到镜头": {
+    "en": "From idea to shot",
+    "ja": "アイデアから映像へ"
+  },
+  "已生成配音": {
+    "en": "Generated voiceover",
+    "ja": "生成済み音声"
+  },
+  "已生成动画": {
+    "en": "Generated video",
+    "ja": "生成済み動画"
+  },
+  "JSON 必须是项目对象。": {
+    "en": "JSON must be a project object.",
+    "ja": "JSON はプロジェクト形式である必要があります。"
+  },
+  "项目缺少 direction_name、characters 或 storyboard。": {
+    "en": "Project missing direction_name, characters or storyboard.",
+    "ja": "direction_name、characters、storyboard がありません。"
+  },
+  "人物或分镜数据格式无效。": {
+    "en": "Invalid character or storyboard data.",
+    "ja": "キャラクターまたは絵コンテの形式が無効です。"
+  },
+  "导演计划格式无效。": {
+    "en": "Invalid director plan format.",
+    "ja": "ディレクタープランの形式が無効です。"
+  },
+  "项目过大：最多支持 200 位人物、2,000 个镜头。": {
+    "en": "Project too large: maximum 200 characters and 2,000 shots.",
+    "ja": "プロジェクトが大きすぎます。キャラクターは 200 人、カットは 2,000 件までです。"
+  },
+  "项目工作区记录格式无效。": {
+    "en": "Invalid project workspace data.",
+    "ja": "プロジェクトの作業データが無効です。"
+  },
+  "中文": {
+    "en": "Chinese",
+    "ja": "中国語"
+  },
+  "日文": {
+    "en": "Japanese",
+    "ja": "日本語"
+  },
+  "英文": {
+    "en": "English",
+    "ja": "英語"
+  },
+  "韩文": {
+    "en": "Korean",
+    "ja": "韓国語"
+  },
+  "人物 {0}": {
+    "en": "Character {0}",
+    "ja": "キャラクター {0}"
+  },
+  "{0} 台词": {
+    "en": "{0} dialogue",
+    "ja": "{0} の台詞"
+  },
+  "镜头": {
+    "en": "Shot",
+    "ja": "カット"
+  },
+  "旁白台词": {
+    "en": "Narration text",
+    "ja": "ナレーションの台詞"
+  },
+  "日本": {
+    "en": "Japan",
+    "ja": "日本"
+  },
+  "普通话": {
+    "en": "Mandarin",
+    "ja": "標準中国語"
+  },
+  "当前浏览器不支持语音朗读，请使用 Chrome、Edge 或 Safari。": {
+    "en": "Speech is not supported in this browser. Use Chrome, Edge or Safari.",
+    "ja": "このブラウザーは読み上げに対応していません。Chrome、Edge、Safari を使用してください。"
+  },
+  "当前没有可朗读的文字。": {
+    "en": "No text available to read.",
+    "ja": "読み上げるテキストがありません。"
+  },
+  "设备语音尚未加载，请稍后再次点击朗读。": {
+    "en": "Device voices are not loaded yet. Try again shortly.",
+    "ja": "端末の音声を読み込み中です。少し待ってから再試行してください。"
+  },
+  "设备未提供{0}语音，请安装该语言语音或选择其他语言。": {
+    "en": "No {0} voice available. Install that language's voice or choose another language.",
+    "ja": "端末に {0} の音声がありません。音声を追加するか、別の言語を選択してください。"
+  },
+  "朗读完成。": {
+    "en": "Reading complete.",
+    "ja": "読み上げが完了しました。"
+  },
+  "正在朗读 {0}/{1} · {2}": {
+    "en": "Reading {0}/{1} · {2}",
+    "ja": "読み上げ中 {0}/{1} · {2}"
+  },
+  "浏览器未允许朗读，请再次点击播放按钮。": {
+    "en": "The browser blocked speech. Click Play again.",
+    "ja": "ブラウザーが読み上げをブロックしました。もう一度再生してください。"
+  },
+  "朗读未能完成，请确认设备语音可用后重试。": {
+    "en": "Reading failed. Check device voices and try again.",
+    "ja": "読み上げに失敗しました。端末の音声を確認して再試行してください。"
+  },
+  "场景参考": {
+    "en": "Scene reference",
+    "ja": "シーン参考画像"
+  },
+  "请先在声音设计中为当前台词生成配音；修改台词或音色后需要重新生成。": {
+    "en": "Generate the current dialogue in Sound design first. Regenerate after changing text or voice.",
+    "ja": "先に音声設計で現在の台詞の音声を生成してください。台詞や音声を変更した場合は再生成が必要です。"
+  },
+  "请在人物展示中上传并保存图片：": {
+    "en": "Upload and save images in Characters: ",
+    "ja": "キャラクター画面で画像をアップロードして保存してください："
+  },
+  "提示词中有参考编号但无法匹配人物，请写出人物展示中的姓名。": {
+    "en": "Reference numbers cannot be matched. Use character names from Characters in the prompt.",
+    "ja": "参考番号をキャラクターに照合できません。プロンプトにキャラクター画面の名前を記載してください。"
+  },
+  "此镜头没有可用的人物图片，请上传场景参考图。": {
+    "en": "No character image for this shot. Upload a scene reference.",
+    "ja": "このカットには使用できる人物画像がありません。シーン参考画像をアップロードしてください。"
+  },
+  "参考图片超过 9 张，请拆分镜头或移除场景参考图。": {
+    "en": "More than 9 reference images. Split the shot or remove the scene reference.",
+    "ja": "参考画像は 9 枚までです。カットを分割するか、シーン参考画像を削除してください。"
+  },
+  "晓晓 · 中文女声": {
+    "en": "Xiaoxiao · Chinese female",
+    "ja": "暁暁 · 中国語・女性"
+  },
+  "云希 · 中文男声": {
+    "en": "Yunxi · Chinese male",
+    "ja": "雲希 · 中国語・男性"
+  },
+  "Nanami · 日文女声": {
+    "en": "Nanami · Japanese female",
+    "ja": "Nanami · 日本語・女性"
+  },
+  "Keita · 日文男声": {
+    "en": "Keita · Japanese male",
+    "ja": "Keita · 日本語・男性"
+  },
+  "Jenny · 英文女声": {
+    "en": "Jenny · English female",
+    "ja": "Jenny · 英語・女性"
+  },
+  "Guy · 英文男声": {
+    "en": "Guy · English male",
+    "ja": "Guy · 英語・男性"
+  },
+  "SunHi · 韩文女声": {
+    "en": "SunHi · Korean female",
+    "ja": "SunHi · 韓国語・女性"
+  },
+  "InJoon · 韩文男声": {
+    "en": "InJoon · Korean male",
+    "ja": "InJoon · 韓国語・男性"
+  },
+  "Edge TTS 生成超时，请稍后重试。": {
+    "en": "Edge TTS timed out. Try again later.",
+    "ja": "Edge TTS がタイムアウトしました。後で再試行してください。"
+  },
+  "Edge TTS 未安装或无法启动，请检查项目 Python 环境。": {
+    "en": "Edge TTS unavailable. Check the project's Python environment.",
+    "ja": "Edge TTS を起動できません。プロジェクトの Python 環境を確認してください。"
+  },
+  "已停止配音生成": {
+    "en": "Voice generation stopped",
+    "ja": "音声生成を停止しました"
+  },
+  "Edge TTS 连接失败，请检查网络后重试。": {
+    "en": "Edge TTS connection failed. Check your network.",
+    "ja": "Edge TTS に接続できません。ネットワークを確認してください。"
+  },
+  "Edge TTS 未返回音频。": {
+    "en": "Edge TTS returned no audio.",
+    "ja": "Edge TTS から音声が返されませんでした。"
+  },
+  "请选择支持的音色，并输入 1–5,000 字的台词。": {
+    "en": "Select a supported voice and enter 1–5,000 characters of dialogue.",
+    "ja": "対応する音声を選び、台詞を 1～5,000 文字で入力してください。"
+  },
+  "配音任务繁忙，请稍后重试。": {
+    "en": "Voice generation is busy. Try again shortly.",
+    "ja": "音声生成が混み合っています。少し待ってから再試行してください。"
+  },
+  "音频不存在。": {
+    "en": "Audio not found.",
+    "ja": "音声がありません。"
+  },
+  "音频不存在，请重新生成。": {
+    "en": "Audio not found. Generate it again.",
+    "ja": "音声がありません。再生成してください。"
+  },
+  "请先在 ai& 控制台 Playground 接受视频服务条款。": {
+    "en": "Accept the video service terms in the ai& Playground first.",
+    "ja": "先に ai& Playground で動画サービスの利用規約に同意してください。"
+  },
+  "ai& 余额不足。": {
+    "en": "Insufficient ai& balance.",
+    "ja": "ai& の残高が不足しています。"
+  },
+  "ai& 月度预算不足。": {
+    "en": "Insufficient ai& monthly budget.",
+    "ja": "ai& の月間予算が不足しています。"
+  },
+  "ai& 同时生成数量已达上限，请等待现有任务完成。": {
+    "en": "ai& concurrent generation limit reached. Wait for active tasks to finish.",
+    "ja": "ai& の同時生成数が上限に達しています。処理中のタスクが終わるまでお待ちください。"
+  },
+  "ai& 提交过于频繁，请稍后重试。": {
+    "en": "Too many ai& submissions. Try again shortly.",
+    "ja": "ai& への送信頻度が高すぎます。少し待ってから再試行してください。"
+  },
+  "提示词或参考素材未通过内容审核，请修改后重试。": {
+    "en": "Prompt or media rejected by content review. Edit and try again.",
+    "ja": "プロンプトまたは素材が審査を通過しませんでした。修正して再試行してください。"
+  },
+  "视频服务暂不可用。": {
+    "en": "Video service temporarily unavailable.",
+    "ja": "動画サービスを一時的に利用できません。"
+  },
+  "当前账户无法使用 MiniMax H3。": {
+    "en": "MiniMax H3 is unavailable for this account.",
+    "ja": "このアカウントでは MiniMax H3 を使用できません。"
+  },
+  "后端未配置 AIAND_API_KEY。": {
+    "en": "AIAND_API_KEY is not configured on the backend.",
+    "ja": "バックエンドに AIAND_API_KEY が設定されていません。"
+  },
+  "ai& 请求失败（{0}{1}）。": {
+    "en": "ai& request failed ({0}{1}).",
+    "ja": "ai& へのリクエストに失敗しました（{0}{1}）。"
+  },
+  "参考素材格式无效。": {
+    "en": "Invalid reference media format.",
+    "ja": "参考素材の形式が無効です。"
+  },
+  "参考素材过大或为空。": {
+    "en": "Reference media is empty or too large.",
+    "ja": "参考素材が空か、大きすぎます。"
+  },
+  "请检查提示词、首帧提示词、时长（4–15 秒）与画幅。": {
+    "en": "Check prompts, duration (4–15 seconds) and aspect ratio.",
+    "ja": "プロンプト、開始フレーム、長さ（4～15 秒）、アスペクト比を確認してください。"
+  },
+  "生成动画必须使用当前镜头已生成的配音。": {
+    "en": "Video generation requires the generated voiceover for this shot.",
+    "ja": "動画を生成するには、このカットの生成済み音声が必要です。"
+  },
+  "人物参考数据无效。": {
+    "en": "Invalid character reference data.",
+    "ja": "キャラクター参考データが無効です。"
+  },
+  "音频参考至少需要一张人物或场景图片。": {
+    "en": "Audio reference requires at least one character or scene image.",
+    "ja": "音声を参照するには、人物またはシーンの画像が 1 枚以上必要です。"
+  },
+  "参考图片不能超过 9 张。": {
+    "en": "Maximum 9 reference images.",
+    "ja": "参考画像は 9 枚までです。"
+  },
+  "缺少参考素材版本，请刷新后重新提交。": {
+    "en": "Reference version missing. Refresh and submit again.",
+    "ja": "素材のバージョンがありません。ページを更新して再送信してください。"
+  },
+  "提示词和参考说明总长度超过 7,000 字，请缩短提示词。": {
+    "en": "Prompt and reference descriptions exceed 7,000 characters. Shorten them.",
+    "ja": "プロンプトと参考説明の合計が 7,000 文字を超えています。短くしてください。"
+  },
+  "配音时长检查超时。": {
+    "en": "Audio duration check timed out.",
+    "ja": "音声の長さの確認がタイムアウトしました。"
+  },
+  "无法读取配音时长，请安装 FFmpeg / ffprobe 或设置 FFPROBE_BIN。": {
+    "en": "Cannot read audio duration. Install FFmpeg / ffprobe or set FFPROBE_BIN.",
+    "ja": "音声の長さを取得できません。FFmpeg / ffprobe をインストールするか、FFPROBE_BIN を設定してください。"
+  },
+  "无法识别配音文件，请重新生成配音。": {
+    "en": "Unrecognized audio file. Generate the voiceover again.",
+    "ja": "音声ファイルを認識できません。音声を再生成してください。"
+  },
+  "ai& 未返回素材 ID。": {
+    "en": "ai& returned no media ID.",
+    "ja": "ai& から素材 ID が返されませんでした。"
+  },
+  "配音长 {0} 秒，超过镜头 {1} 秒。请延长镜头或拆分台词，避免被截断。": {
+    "en": "Audio is {0} seconds, longer than the {1}-second shot. Extend the shot or split the dialogue to avoid truncation.",
+    "ja": "音声は {0} 秒で、カットの {1} 秒を超えています。音声が途切れないよう、カットを延ばすか台詞を分割してください。"
+  },
+  "未返回可用的视频任务 ID。": {
+    "en": "No valid video task ID returned.",
+    "ja": "有効な動画タスク ID が返されませんでした。"
+  },
+  "提交状态待确认，请先在 ai& 控制台检查任务，避免重复扣费。": {
+    "en": "Submission uncertain. Check tasks in the ai& console to avoid duplicate charges.",
+    "ja": "送信状況が不明です。重複課金を避けるため、先に ai& コンソールでタスクを確認してください。"
+  },
+  "视频生成失败。": {
+    "en": "Video generation failed.",
+    "ja": "動画の生成に失敗しました。"
+  },
+  "视频文件为空。": {
+    "en": "Video file is empty.",
+    "ja": "動画ファイルが空です。"
+  },
+  "视频已生成，原配音混流未完成：": {
+    "en": "Video generated; narration mixing is incomplete: ",
+    "ja": "動画は生成済みですが、元の音声との合成が未完了です："
+  },
+  "。将自动重试，不重新生成视频。": {
+    "en": ". Retrying automatically without regenerating video.",
+    "ja": "。動画を再生成せずに、自動で再試行します。"
+  },
+  "此任务尚无本地视频。": {
+    "en": "No local video for this task yet.",
+    "ja": "このタスクのローカル動画はまだありません。"
+  },
+  "任务不存在。": {
+    "en": "Task not found.",
+    "ja": "タスクがありません。"
+  },
+  "无法读取本地视频任务。": {
+    "en": "Unable to read the local video task.",
+    "ja": "ローカル動画タスクを読み込めません。"
+  },
+  "视频尚未缓存。": {
+    "en": "Video not cached yet.",
+    "ja": "動画はまだ保存されていません。"
+  },
+  "视频文件不存在。": {
+    "en": "Video file not found.",
+    "ja": "動画ファイルがありません。"
+  },
+  "不允许跨站请求。": {
+    "en": "Cross-site requests are not allowed.",
+    "ja": "別のサイトからのリクエストは許可されていません。"
+  },
+  "请选择画风、节奏，并输入 1–12,000 字的内容。": {
+    "en": "Choose a style and pace, then enter 1–12,000 characters.",
+    "ja": "画風とテンポを選び、内容を 1～12,000 文字で入力してください。"
+  },
+  "已有任务正在生成，请等待完成。": {
+    "en": "Another task is generating. Wait for it to finish.",
+    "ja": "別のタスクを生成中です。完了するまでお待ちください。"
+  },
+  "任务不存在或服务已重启，请重新生成。": {
+    "en": "Task missing or service restarted. Generate again.",
+    "ja": "タスクが存在しないか、サービスが再起動しました。再生成してください。"
+  },
+  "内容过长。": {
+    "en": "Content is too long.",
+    "ja": "内容が長すぎます。"
+  },
+  "请求处理失败。": {
+    "en": "Request failed.",
+    "ja": "リクエストの処理に失敗しました。"
+  },
+  "Copy": {
+    "en": "Copy",
+    "ja": "コピー"
+  },
+  "Copied ✓": {
+    "en": "Copied ✓",
+    "ja": "コピー済み ✓"
+  },
+  "请在人物展示中上传并保存图片：{0}。": {
+    "en": "Upload and save images in Characters: {0}.",
+    "ja": "キャラクター画面で画像をアップロードして保存してください：{0}。"
+  },
+  "本地保存失败：{0}": {
+    "en": "Local save failed: {0}",
+    "ja": "ローカル保存に失敗しました：{0}"
+  },
+  "连接中断：{0}。可继续查询或停止后续生成。": {
+    "en": "Connection interrupted: {0}. Resume checking or stop further generation.",
+    "ja": "接続が中断されました：{0}。確認を再開するか、後続の生成を停止してください。"
+  },
+  "连接中断：{0}。点击“继续查询 / 处理”，会复用原任务编号。": {
+    "en": "Connection interrupted: {0}. Resume checking to reuse the existing task ID.",
+    "ja": "接続が中断されました：{0}。確認を再開すると同じタスク ID を使用します。"
+  },
+  "视频已生成，原配音混流未完成：{0}。将自动重试，不重新生成视频。": {
+    "en": "Video generated; narration mixing is incomplete: {0}. Retrying without regenerating video.",
+    "ja": "動画は生成済みですが、音声合成が未完了です：{0}。動画を再生成せずに再試行します。"
+  },
+  "正在修正项目结构（{0}/2）": {
+    "en": "Revising project structure ({0}/2)",
+    "ja": "プロジェクト構成を修正中（{0}/2）"
+  },
+  "生成超时，请缩短内容后重试。": {
+    "en": "Generation timed out. Shorten the content and try again.",
+    "ja": "生成がタイムアウトしました。内容を短くして再試行してください。"
+  },
+  "无法启动本地 aiand 或校验器，请检查安装与配置。": {
+    "en": "Cannot start local aiand or the validator. Check installation and configuration.",
+    "ja": "ローカルの aiand または検証ツールを起動できません。インストールと設定を確認してください。"
+  },
+  "返回内容超过大小限制。": {
+    "en": "Response exceeds the size limit.",
+    "ja": "応答がサイズの上限を超えています。"
+  },
+  "aiand 调用失败，请检查 API key、模型权限或网络连接。": {
+    "en": "aiand failed. Check the API key, model access and network connection.",
+    "ja": "aiand の実行に失敗しました。API キー、モデルの利用権限、ネットワークを確認してください。"
+  },
+  "模型输出被截断，请缩短故事后重试。": {
+    "en": "Model output was truncated. Shorten the story and try again.",
+    "ja": "モデルの出力が途中で切れました。ストーリーを短くして再試行してください。"
+  },
+  "模型未返回 JSON 内容。": {
+    "en": "The model returned no JSON content.",
+    "ja": "モデルから JSON が返されませんでした。"
+  },
+  "模型返回了不兼容的项目格式。": {
+    "en": "The model returned an incompatible project format.",
+    "ja": "モデルが返したプロジェクトの形式に対応していません。"
+  },
+  "模型生成的数据未通过分镜校验，请调整内容重试。": {
+    "en": "Generated data failed storyboard validation. Adjust the content and try again.",
+    "ja": "生成データが絵コンテの検証を通過しませんでした。内容を修正して再試行してください。"
+  },
+  "Auto": {
+    "en": "Auto",
+    "ja": "自動"
+  }
+}

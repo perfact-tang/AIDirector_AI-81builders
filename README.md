@@ -104,3 +104,9 @@ MP4 不内嵌在 JSON，以免文件过大；它的 `/api/videos/<id>/content` �
 每个新任务记录实际 submittedRequest、Files API 文件 ID、人物名单及输入文件 SHA-256。生成完成后缓存 `.provider.mp4` 原始返回，再通过 `.narration.mp3` 原始配音制作最终 `.mp4`；混流失败会重试本地处理，不新建收费任务。`audioLocked: true` / `audioPolicy: original-narration-v2` 表示最终输出已使用原始配音，而非模型返回的音轨。
 
 旧视频可点击“使用当前配音修复音轨（免费）”，对应 `POST /api/videos/:id/restore-narration`，只做本机 FFmpeg 处理；保留原始画面与 provider 备份，不调用视频生成。音频超过原视频长度时拒绝修复，避免截断台词。可使用 FFMPEG_BIN 指定 FFmpeg。人物参考变化或提示词编译规则升级后，旧动画会显示过期，需用户主动决定是否重新生成。
+
+### 界面语言
+
+右下角语言按钮支持简体中文、English 和日本語，选择保存在浏览器的 `director-language` 中。语言切换即时生效，不会重载项目或重新提交生成任务；故事、人物资料、提示词、台词及导出的项目数据保留原文，配音音色和朗读语言也独立于界面语言。
+
+界面词条集中在 `src/translations.json`，`src/i18n.js` 处理动态数量与状态提示的插值，`src/LanguageProvider.jsx` 提供语言状态与切换入口。新增界面文案时通过 `useI18n()` 的 `t()` 展示，并补充英文、日文词条；不要将用户输入、生成提示词或完整项目 JSON 交给界面翻译。`npm test` 会检查译文完整性和插值占位符一致性。
