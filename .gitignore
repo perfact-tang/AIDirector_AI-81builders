@@ -147,3 +147,8 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Local speech runtime and generated audio
+.venv/
+.local/
+__pycache__/
