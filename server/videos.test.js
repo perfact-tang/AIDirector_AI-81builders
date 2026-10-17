@@ -34,3 +34,13 @@ test('uncertain submit is persisted without automatically resubmitting a paid re
  const request=async route=>{if(route==='files')return json({id:'file_mock'});posts++;throw new Error('fetch failed');};
  try{const service=createVideoService(request,folder,options);assert.equal((await service.submit(input)).status,'submission_unknown');await service.submit(input);assert.equal(posts,1);assert.equal((await service.get(input.requestId)).status,'submission_unknown');}finally{await rm(folder,{recursive:true,force:true});}
 });
+test('last-frame continuity is sent as an image reference while retaining narration and character references',async()=>{
+ const folder=await mkdtemp(path.join(tmpdir(),'video-continuity-')),bodies=[],purposes=[];
+ const continuity={sourceUrl:'/api/videos/source-video-shot-001/content',sourceKey:'source-key',sourceIndex:0,frameTime:4.999,sourceDuration:5,width:1280,height:720};
+ const request=async(route,opts)=>{if(route==='files'){purposes.push(opts.body.get('purpose'));return json({id:'file-'+purposes.length});}bodies.push(JSON.parse(opts.body));return json({id:'video_continuity',status:'queued'});};
+ try{
+  const service=createVideoService(request,folder,options),job=await service.submit({...input,image,continuity,requestId:'continuity-job-12345'});
+  assert.deepEqual(purposes,['vision','vision','audio']);assert.deepEqual(bodies[0].references,{images:[{file_id:'file-1'},{file_id:'file-2'}],audio:[{file_id:'file-3'}]});assert.match(bodies[0].prompt,/<Picture 2> = 上一镜头尾帧/);assert.match(bodies[0].prompt,/唯一主配音/);assert.equal(job.inputManifest.images[1].name,'上一镜头尾帧');assert.deepEqual(job.inputManifest.continuity,continuity);
+  for(const change of [{image:undefined},{continuity:{...continuity,sourceUrl:'https://evil.test/video.mp4'}},{continuity:{...continuity,frameTime:6}}])assert.throws(()=>validateVideo({...input,image,continuity,...change}),/尾帧/);
+ }finally{await rm(folder,{recursive:true,force:true});}
+});

@@ -142,6 +142,16 @@ Video generation can incur API charges. Review the account pricing shown in the 
 
 The final MP4 uses the generated narration as its audio track. FFmpeg preserves the video's encoded picture stream while restoring the narration; provider-original video files are retained locally.
 
+### Continue a scene with the previous shot's last frame
+
+In a shot's storyboard settings, enable **Use the previous shot’s last frame as scene reference**. The first shot needs an uploaded image; subsequent shots can capture the immediately previous completed video's last frame automatically.
+
+The browser uses JavaScript video seeking and Canvas to create a JPEG reference. During batch generation, capture happens only when the shot reaches the front of the queue, after its predecessor has completed. Regenerating a sequence therefore uses the newly generated predecessor, rather than an old cached frame.
+
+This reference replaces the manually uploaded scene image for that shot. Character images and narration are still included, and the prompt identifies the frame as a continuity reference. The extracted image, source video, and capture timestamp are saved in project JSON and recorded with the submitted media. Disable the option to return to the manual scene image.
+
+If the previous shot fails or its frame cannot be read, the dependent shot pauses before submission. Stop the queue, complete the preceding shot, then continue generation. A prepared submission retains the same frame and request ID on retries to avoid changing an already submitted paid task.
+
 ## Saving and reopening work
 
 Use **Save project JSON** to export edited dialogue, prompts, character images, voiceovers, timing metadata, and video task IDs and paths. On the home screen, use **Load project JSON** to reopen it without submitting new generation requests.

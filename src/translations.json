@@ -1570,5 +1570,73 @@
   "导演 Skill 文件缺失，请运行 npm run skills:install，或检查 DIRECTOR_SKILL_PATH。": {
     "en": "Director Skill files are missing. Run npm run skills:install or check DIRECTOR_SKILL_PATH.",
     "ja": "ディレクター Skill のファイルがありません。npm run skills:install を実行するか、DIRECTOR_SKILL_PATH を確認してください。"
+  },
+  "使用上一镜头尾帧作为场景参考": {
+    "en": "Use the previous shot’s last frame as scene reference",
+    "ja": "前のカットの最終フレームをシーン参考に使用"
+  },
+  "首个镜头没有上一镜头，请上传参考图。": {
+    "en": "The first shot has no predecessor. Upload a reference image.",
+    "ja": "最初のカットには前のカットがありません。参考画像をアップロードしてください。"
+  },
+  "批量生成时自动等待上一镜头完成，再抽取尾帧；人物图片与配音仍照常使用。": {
+    "en": "Batch generation waits for the previous shot, then captures its last frame. Character images and narration are still used.",
+    "ja": "一括生成では前のカットの完了を待って最終フレームを抽出します。人物画像と音声は引き続き使用します。"
+  },
+  "开启后用上一镜头尾帧替代手动场景参考图。": {
+    "en": "When enabled, the previous shot’s last frame replaces the manual scene image.",
+    "ja": "有効にすると、手動のシーン画像の代わりに前のカットの最終フレームを使用します。"
+  },
+  "上一镜头尾帧参考图": {
+    "en": "Previous shot’s last-frame reference",
+    "ja": "前のカットの最終フレーム参考画像"
+  },
+  "已提取：{0} · {1} 秒": {
+    "en": "Captured: {0} · {1}s",
+    "ja": "抽出済み：{0} · {1} 秒"
+  },
+  "上一镜头已就绪，轮到当前镜头时自动提取。": {
+    "en": "Previous shot is ready. Its last frame will be captured when this shot starts.",
+    "ja": "前のカットは準備済みです。このカットの処理開始時に自動抽出します。"
+  },
+  "请先生成上一镜头，或使用“生成全部动画”按顺序处理。": {
+    "en": "Generate the previous shot first, or use Generate all videos to process in order.",
+    "ja": "先に前のカットを生成するか、「動画をすべて生成」で順番に処理してください。"
+  },
+  "正在提取上一镜头尾帧…": {
+    "en": "Capturing the previous shot’s last frame…",
+    "ja": "前のカットの最終フレームを抽出中…"
+  },
+  "上一镜头尚未生成成功，已暂停当前及后续生成。请先完成上一镜头。": {
+    "en": "The previous shot has not completed successfully. This and later shots are paused. Complete the previous shot first.",
+    "ja": "前のカットが正常に完了していないため、このカット以降を停止しました。先に前のカットを完成させてください。"
+  },
+  "提取尾帧超时，请检查视频后重试。": {
+    "en": "Last-frame capture timed out. Check the video and try again.",
+    "ja": "最終フレームの抽出がタイムアウトしました。動画を確認して再試行してください。"
+  },
+  "无法读取上一镜头视频，请检查动画文件。": {
+    "en": "Cannot read the previous video. Check the video file.",
+    "ja": "前のカットの動画を読み込めません。動画ファイルを確認してください。"
+  },
+  "上一镜头视频时长无效，无法提取尾帧。": {
+    "en": "Previous video has an invalid duration. Cannot capture its last frame.",
+    "ja": "前の動画の長さが無効なため、最終フレームを抽出できません。"
+  },
+  "上一镜头没有可用的视频画面。": {
+    "en": "The previous shot has no readable video frames.",
+    "ja": "前のカットに読み込める映像がありません。"
+  },
+  "当前浏览器无法提取视频尾帧。": {
+    "en": "This browser could not capture the video’s last frame.",
+    "ja": "このブラウザーでは動画の最終フレームを抽出できませんでした。"
+  },
+  "尾帧参考记录无效，请重新提取。": {
+    "en": "Invalid last-frame reference record. Capture the frame again.",
+    "ja": "最終フレームの参照情報が無効です。再度抽出してください。"
+  },
+  "尾帧参考准备失败：{0}": {
+    "en": "Last-frame preparation failed: {0}",
+    "ja": "最終フレームの準備に失敗しました：{0}"
   }
 }

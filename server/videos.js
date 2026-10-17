@@ -37,6 +37,10 @@ export function validateVideo(b){
  if(b.characters.length+(b.image?1:0)<1)throw new Error('音频参考至少需要一张人物或场景图片。');
  if(b.characters.length+(b.image?1:0)>9)throw new Error('参考图片不能超过 9 张。');
  if(typeof b.referenceKey!=='string'||b.referenceKey.length>100)throw new Error('缺少参考素材版本，请刷新后重新提交。');
+ if(b.continuity){
+  const c=b.continuity;
+  if(!b.image||!/^\/api\/videos\/[-\w]{16,80}\/content$/.test(c.sourceUrl||'')||typeof c.sourceKey!=='string'||c.sourceKey.length>100||!Number.isInteger(c.sourceIndex)||c.sourceIndex<0||!Number.isFinite(c.frameTime)||c.frameTime<0||!Number.isFinite(c.sourceDuration)||c.sourceDuration<=0||c.frameTime>c.sourceDuration)throw new Error('尾帧参考记录无效，请重新提取。');
+ }
  if(videoPrompt(b).length>7000)throw new Error('提示词和参考说明总长度超过 7,000 字，请缩短提示词。');
 }
 export const videoPrompt=compileVideoPrompt;
@@ -65,14 +69,15 @@ export function createVideoService(request=aiRequest,folder=directory,{audioInsp
     await preflight();
     await writeFile(path.join(folder,id+'.narration.mp3'),decodeMedia(body.audio,'audio').bytes);
     job.narrationFile=id+'.narration.mp3';job.pipelineVersion='voice-image-v2';
+    if(body.continuity)job.continuity={...body.continuity};
     job.audioDuration=duration;job.referenceKey=body.referenceKey;job.referenceNames=body.characters.map(c=>c.name);
     const payload={model:MODEL,prompt:videoPrompt(body),seconds:body.seconds,aspect_ratio:body.aspect};
     const images=[];const manifest=[];
     const hash=value=>createHash('sha256').update(decodeMedia(value,'image').bytes).digest('hex');
     for(const character of body.characters){const file_id=await upload(character.image,'image');images.push({file_id});manifest.push({name:character.name,file_id,sha256:hash(character.image)});}
-    if(body.image){const file_id=await upload(body.image,'image');images.push({file_id});manifest.push({name:'场景参考',file_id,sha256:hash(body.image)});}
+    if(body.image){const file_id=await upload(body.image,'image');images.push({file_id});manifest.push({name:body.continuity?'上一镜头尾帧':'场景参考',file_id,sha256:hash(body.image)});}
     payload.references={images,audio:[{file_id:await upload(body.audio,'audio')}]};
-    job.submittedRequest=payload;job.inputManifest={images:manifest,audio:{file_id:payload.references.audio[0].file_id,sha256:createHash('sha256').update(decodeMedia(body.audio,'audio').bytes).digest('hex')}};
+    job.submittedRequest=payload;job.inputManifest={images:manifest,...(job.continuity?{continuity:job.continuity}:{}),audio:{file_id:payload.references.audio[0].file_id,sha256:createHash('sha256').update(decodeMedia(body.audio,'audio').bytes).digest('hex')}};
     await save(job);
     posting=true;
     const result=await(await request('videos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})).json();

@@ -36,3 +36,12 @@ test('voice duration, speed and original source survive project JSON export and 
   const clip=restoreVoice(parseProjectFile(project)).clips[0];for(const [key,value]of Object.entries(timing))assert.equal(clip[key],value);
  }
 });
+test('previous-frame mode, cached image and source audit survive JSON round-trip without restoring paid queues',()=>{
+ const data=sample();data.project.storyboard[0].mvinfo.push({...data.project.storyboard[0].mvinfo[0],shot_id:'SHOT-002'});
+ const previousFrame={image:'data:image/jpeg;base64,aGk=',sourceUrl:video,sourceKey:'key:1',sourceIndex:0,frameTime:4.999,sourceDuration:5,width:1280,height:720};
+ const drafts=[{prompt:'第一镜',firstPrompt:'',seconds:5,revision:'first'},{prompt:'第二镜',firstPrompt:'',seconds:5,revision:'second',usePreviousFrame:true,previousFrame}];
+ const state={drafts,jobs:{0:{id:'qa-video-1792208798315',url:video,status:'completed'}},queue:[{index:1,usePreviousFrame:true,body:{requestId:'not-submitted-tail-123'}}],aspect:'16:9'};
+ const output=snapshotProject(data,{video:state});assert.deepEqual(output.director_workspace.pending_video_tasks,[]);
+ for(const document of [output,{project:output.project}]){const restored=restoreVideo(parseProjectFile(document));assert.equal(restored.drafts[0].usePreviousFrame,false);assert.equal(restored.drafts[1].usePreviousFrame,true);assert.deepEqual(restored.drafts[1].previousFrame,previousFrame);assert.deepEqual(restored.queue,[]);}
+ const unsafe=structuredClone(output);unsafe.director_workspace.video.drafts[1].previousFrame.sourceUrl='https://untrusted.test/video.mp4';unsafe.project.storyboard[0].mvinfo[1].generated_assets.previous_frame.sourceUrl='https://untrusted.test/video.mp4';assert.equal(restoreVideo(parseProjectFile(unsafe)).drafts[1].previousFrame,undefined);
+});
