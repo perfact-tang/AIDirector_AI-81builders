@@ -1,10 +1,10 @@
 import React,{useEffect,useId,useRef} from 'react';
 import {createPortal} from 'react-dom';
 
-export function Modal({title,children,footer,onCancel}){
+export function Modal({title,children,footer,onCancel,className=''}){
  const ref=useRef(null),id=useId();
  useEffect(()=>{const dialog=ref.current,previous=document.activeElement;dialog.showModal();const overflow=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{dialog.close();document.body.style.overflow=overflow;previous?.focus?.();};},[]);
- return createPortal(<dialog ref={ref} className="generation-dialog" aria-labelledby={id} onCancel={e=>{e.preventDefault();onCancel?.();}}><div className="generation-heading"><span className="generation-eyebrow">DIRECTOR / STUDIO</span><h2 id={id}>{title}</h2></div>{children}<div className="generation-footer">{footer}</div></dialog>,document.body);
+ return createPortal(<dialog ref={ref} className={`generation-dialog ${className}`} aria-labelledby={id} onCancel={e=>{e.preventDefault();onCancel?.();}}><div className="generation-heading"><span className="generation-eyebrow">DIRECTOR / STUDIO</span><h2 id={id}>{title}</h2></div>{children}<div className="generation-footer">{footer}</div></dialog>,document.body);
 }
 export default function GenerationDialog({title,rows,onStop,video=false,paused=false,onResume}){
  const list=useRef(null);
