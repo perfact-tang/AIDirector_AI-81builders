@@ -8,11 +8,21 @@ export function mediaSource(value,type){
  return /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(url)?url:'';
 }
 export const shotsOf=data=>data.project.storyboard.flatMap(s=>s.mvinfo);
+export function voiceTiming(clip){
+ const result={};if(!clip||typeof clip!=='object')return result;
+ for(const key of ['duration','originalDuration','targetDuration','speed'])if(Number.isFinite(clip[key])&&clip[key]>0)result[key]=clip[key];
+ if(clip.durationChecked===true&&['duration','originalDuration','targetDuration','speed'].every(key=>result[key]>0)){
+  result.durationChecked=true;result.adjusted=clip.adjusted===true;
+  if(typeof clip.timingVersion==='string')result.timingVersion=clip.timingVersion.slice(0,80);
+ }
+ const source=mediaSource(clip.sourceUrl,'audio');if(source?.startsWith('/api/audio/'))result.sourceUrl=source;
+ return result;
+}
 export function restoreVoice(data){
  const shots=shotsOf(data),saved=data.director_workspace?.voice;
  const texts=shots.map((s,i)=>typeof saved?.texts?.[i]==='string'?saved.texts[i]:dialogue(s.audio_plan?.audio_text??s.lyrics));
  const clips={};
- shots.forEach((s,i)=>{const clip=saved?.clips?.[i]??s.generated_assets?.voice_audio;const url=mediaSource(clip,'audio');if(url)clips[i]={text:typeof clip.text==='string'?clip.text:texts[i].trim(),voice:typeof clip.voice==='string'?clip.voice:typeof saved?.voice==='string'?saved.voice:'zh-CN-XiaoxiaoNeural',url:mediaSource(clip.url,'audio')||undefined,dataUrl:url.startsWith('data:')?url:undefined};});
+ shots.forEach((s,i)=>{const clip=saved?.clips?.[i]??s.generated_assets?.voice_audio;const url=mediaSource(clip,'audio');if(url)clips[i]={...voiceTiming(clip),text:typeof clip.text==='string'?clip.text:texts[i].trim(),voice:typeof clip.voice==='string'?clip.voice:typeof saved?.voice==='string'?saved.voice:'zh-CN-XiaoxiaoNeural',url:mediaSource(clip.url,'audio')||undefined,dataUrl:url.startsWith('data:')?url:undefined};});
  return {texts,clips,voice:typeof saved?.voice==='string'?saved.voice:'zh-CN-XiaoxiaoNeural'};
 }
 export function restoreVideo(data){
@@ -46,7 +56,7 @@ export function snapshotProject(data,{images={},voice,video}){
  const result={...root,project:{...p,characters:p.characters.map((c,i)=>images[i]?{...c,generated_assets:{...c.generated_assets,image:{data_url:images[i]}}}:c),storyboard:p.storyboard.map(segment=>({...segment,mvinfo:segment.mvinfo.map(s=>{
   const i=index++,text=voice?.texts[i],clip=voice?.clips[i],draft=video?.drafts[i],job=video?.jobs[i];
   const assets={...s.generated_assets};
-  if(text!==undefined&&(clip||text!==dialogue(s.audio_plan?.audio_text??s.lyrics))){assets.voice_audio=clip&&clip.text===text.trim()&&clip.voice===voice.voice?{data_url:clip.dataUrl,url:clip.url,voice:clip.voice,text:clip.text,local_file:clip.url?.match(/^\/api\/audio\/([a-f0-9]{64})\.mp3$/)?'.local/audio/'+clip.url.split('/').pop():undefined}:null;assets.drive_audio=null;}
+  if(text!==undefined&&(clip||text!==dialogue(s.audio_plan?.audio_text??s.lyrics))){assets.voice_audio=clip&&clip.text===text.trim()&&clip.voice===voice.voice?{data_url:clip.dataUrl,url:clip.url,voice:clip.voice,text:clip.text,...voiceTiming(clip),local_file:clip.url?.match(/^\/api\/audio\/([a-f0-9]{64})\.mp3$/)?'.local/audio/'+clip.url.split('/').pop():undefined}:null;assets.drive_audio=null;}
   if(job?.url||job?.previous?.url)assets.video={url:job.url||job.previous.url,task_id:job.id,upstream_id:job.upstreamId,local_file:'.local/videos/'+(job.url||job.previous.url).split('/')[3]+'.mp4'};
   return {...s,...(text!==undefined?{lyrics:text,audio_plan:{...s.audio_plan,audio_text:text}}:{}),video_prompt:draft?.prompt??s.video_prompt,image_prompt:draft?.firstPrompt??s.image_prompt,generation_plan:{...s.generation_plan,...(draft?{duration_seconds:draft.seconds}:{})},generated_assets:assets};
  })}))},director_workspace:{version:1,asset_roots:{videos:'.local/videos/',audio:'.local/audio/'},saved_at:new Date().toISOString(),voice:voice||restoreVoice(data),video:{...(video||restoreVideo(data)),jobs:{...(video||restoreVideo(data)).jobs},queue:[],paused:false},pending_video_tasks:video?.queue?.map(q=>({id:q.body.requestId,index:q.index,revision:q.revision,aspect:q.body.aspect,audioKey:q.audioKey,referenceKey:q.body.referenceKey}))||[]}};

@@ -1498,5 +1498,73 @@
   "Auto": {
     "en": "Auto",
     "ja": "自動"
+  },
+  "生成配音并校验时长，超时将自动加速…": {
+    "en": "Generating and checking duration; overlong audio will be sped up…",
+    "ja": "音声を生成して長さを確認中。長すぎる場合は自動で速度を調整します…"
+  },
+  "已完成 · {0} 秒 → {1} 秒 · 加速 {2}×": {
+    "en": "Completed · {0}s → {1}s · Speed {2}×",
+    "ja": "完了 · {0} 秒 → {1} 秒 · {2} 倍速"
+  },
+  "已完成 · 配音时长校验通过": {
+    "en": "Completed · Voice duration verified",
+    "ja": "完了 · 音声の長さを確認済み"
+  },
+  "Edge TTS 将台词发送至 Microsoft 在线语音服务。生成后自动校验镜头时长，超时配音会自动加速并保存；未超时保持原速。": {
+    "en": "Edge TTS sends dialogue to Microsoft. Generated audio is checked against shot duration; overlong recordings are sped up and saved, shorter ones stay at their original speed.",
+    "ja": "Edge TTS は台詞を Microsoft に送信します。生成後にカットの長さと照合し、長すぎる音声は速度を上げて保存します。収まる場合は元の速度を保ちます。"
+  },
+  "目标 {0} 秒": {
+    "en": "Target {0}s",
+    "ja": "目標 {0} 秒"
+  },
+  "台词、音色或镜头时长已修改，当前配音需重新生成。": {
+    "en": "Dialogue, voice or shot duration changed. Regenerate this voiceover.",
+    "ja": "台詞・音声・カットの長さが変更されています。音声を再生成してください。"
+  },
+  "原始 {0} 秒 → {1} 秒 · 加速 {2}×": {
+    "en": "Original {0}s → {1}s · Speed {2}×",
+    "ja": "元の長さ {0} 秒 → {1} 秒 · {2} 倍速"
+  },
+  "时长已校验：{0} 秒 / 目标 {1} 秒 · 原速": {
+    "en": "Duration verified: {0}s / target {1}s · Original speed",
+    "ja": "長さを確認済み：{0} 秒 / 目標 {1} 秒 · 元の速度"
+  },
+  "此配音尚未校验时长，重新生成时将自动处理。": {
+    "en": "This voiceover has not been checked. Regenerating will check and adjust its duration.",
+    "ja": "この音声の長さは未確認です。再生成すると自動で確認・調整します。"
+  },
+  "配音目标时长必须为 4–15 秒的整数。": {
+    "en": "Voice duration must be a whole number from 4 to 15 seconds.",
+    "ja": "音声の目標時間は 4～15 秒の整数にしてください。"
+  },
+  "无效的配音加速倍数。": {
+    "en": "Invalid voice speed multiplier.",
+    "ja": "音声の速度倍率が無効です。"
+  },
+  "配音加速后仍超时，请缩短台词后重试。": {
+    "en": "Audio is still too long after adjustment. Shorten the dialogue and try again.",
+    "ja": "速度調整後も時間を超過しています。台詞を短くして再試行してください。"
+  },
+  "配音时长校验失败，请重试。": {
+    "en": "Voice duration verification failed. Try again.",
+    "ja": "音声の長さの確認に失敗しました。再試行してください。"
+  },
+  "请选择支持的音色、4–15 秒的镜头时长，并输入 1–5,000 字的台词。": {
+    "en": "Select a supported voice, a 4–15 second shot duration, and 1–5,000 characters of dialogue.",
+    "ja": "対応する音声、4～15 秒のカット時間、1～5,000 文字の台詞を指定してください。"
+  },
+  "本地音视频处理超时。": {
+    "en": "Local media processing timed out.",
+    "ja": "ローカルのメディア処理がタイムアウトしました。"
+  },
+  "无法启动 FFmpeg / ffprobe，请检查本机安装与配置。": {
+    "en": "Cannot start FFmpeg / ffprobe. Check your local installation and configuration.",
+    "ja": "FFmpeg / ffprobe を起動できません。インストールと設定を確認してください。"
+  },
+  "本地音视频处理失败：{0}": {
+    "en": "Local media processing failed: {0}",
+    "ja": "ローカルのメディア処理に失敗しました：{0}"
   }
 }

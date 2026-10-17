@@ -25,3 +25,8 @@ test('no-character shot needs a scene image and unresolved media placeholders ar
  assert.equal(referencePlan('森林空镜',people,[],clip,image).problems.length,0);
  assert.ok(referencePlan('<Subject 1> 望向远方。',people,[],clip,image).problems.some(p=>p.includes('姓名')));
 });
+
+test('shortening a shot invalidates an overlong checked voice without rejecting shorter narration',()=>{
+ const state={texts:['你好'],voice:'voice',clips:{0:{text:'你好',voice:'voice',duration:10,dataUrl:'data:audio/mpeg;base64,aGk='}}};
+ assert.equal(currentVoice(state,0,5),null);assert.equal(currentVoice(state,0,10),state.clips[0]);assert.equal(currentVoice(state,0,15),state.clips[0]);
+});

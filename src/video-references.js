@@ -10,7 +10,7 @@ export function matchCharacters(prompt,characters){
  const accepted=[];for(const m of matches)if(!accepted.some(a=>m.start<a.end&&a.start<m.end))accepted.push(m);
  accepted.sort((a,b)=>a.start-b.start);return accepted.filter((m,i,a)=>a.findIndex(x=>x.index===m.index)===i).map(({index,name})=>({index,name}));
 }
-export function currentVoice(state,index){const clip=state?.clips[index];return clip&&clip.text===state.texts[index]?.trim()&&clip.voice===state.voice?clip:null;}
+export function currentVoice(state,index,seconds){const clip=state?.clips[index];return clip&&clip.text===state.texts[index]?.trim()&&clip.voice===state.voice&&(!Number.isFinite(seconds)||!Number.isFinite(clip.duration)||clip.duration<=seconds+0.02)?clip:null;}
 export function characterSources(data,images={}){return data.project.characters.map((c,index)=>{const asset=c.generated_assets?.image;const image=images[index]||(typeof asset==='string'?asset:asset?.data_url??asset?.dataUrl??asset?.url)||'';const valid=/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(image);return {image:valid?image:'',key:valid?fingerprint(image):''};});}
 export function referencePlan(prompt,characters,sources,clip,scene=''){
  const matched=matchCharacters(prompt,characters),missing=matched.filter(c=>!sources[c.index]?.image).map(c=>c.name);

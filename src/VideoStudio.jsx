@@ -81,8 +81,8 @@ export default function VideoStudio({playbackTarget,data,voiceData,characterImag
  const busy=state.queue.length>0;
  function edit(index,values){setState(s=>({...s,drafts:s.drafts.map((d,i)=>i===index?{...d,...values,revision:crypto.randomUUID()}:d)}));}
  const sources=useMemo(()=>characterSources(data,characterImages),[data,characterImages]);
- const plans=useMemo(()=>state.drafts.map((d,i)=>referencePlan(d.prompt,data.project.characters,sources,currentVoice(voiceData,i),d.image)),[state.drafts,data,sources,voiceData]);
- function voiceFor(i){return currentVoice(voiceData,i);}
+ const plans=useMemo(()=>state.drafts.map((d,i)=>referencePlan(d.prompt,data.project.characters,sources,currentVoice(voiceData,i,d.seconds),d.image)),[state.drafts,data,sources,voiceData]);
+ function voiceFor(i){return currentVoice(voiceData,i,state.drafts[i]?.seconds);}
  function valid(i){const d=state.drafts[i];return imagesReady&&d.prompt.trim()&&d.prompt.length<=6000&&d.firstPrompt.length<=800&&Number.isInteger(d.seconds)&&d.seconds>=4&&d.seconds<=15&&!plans[i].problems.length;}
  function stale(i){const job=state.jobs[i],d=state.drafts[i];return job&&(job.previous||job.revision!==d.revision||job.aspect!==state.aspect||job.referenceKey!==plans[i].key);}
  function enqueue(indices){

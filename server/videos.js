@@ -5,12 +5,11 @@ import {Readable} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
-import {spawn} from 'node:child_process';
 import {mkdtemp} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {copyFile} from 'node:fs/promises';
 import {compileVideoPrompt} from '../src/compiled-video-prompt.js';
-import {lockNarration,mediaTool} from './media-tools.js';
+import {lockNarration,mediaTool,decodedAudioDuration} from './media-tools.js';
 import {tmpdir} from 'node:os';
 const directory=fileURLToPath(new URL('../.local/videos/',import.meta.url));
 const MODEL='minimaxai/minimax-h3';
@@ -45,14 +44,7 @@ export async function inspectAudio(value){
  const {bytes}=decodeMedia(value,'audio'),folder=await mkdtemp(path.join(tmpdir(),'director-audio-check-')),file=path.join(folder,'voice.mp3');
  try{
   await writeFile(file,bytes);
-  return await new Promise((resolve,reject)=>{
-   const child=spawn(process.env.FFPROBE_BIN||'ffprobe',['-v','error','-show_entries','format=duration','-of','json',file],{shell:false,stdio:['ignore','pipe','ignore']});let out='',done=false;
-   const finish=(e,duration)=>{if(done)return;done=true;clearTimeout(timer);e?reject(e):resolve(duration);};
-   const timer=setTimeout(()=>{child.kill();finish(new Error('配音时长检查超时。'));},10000);
-   child.on('error',()=>finish(new Error('无法读取配音时长，请安装 FFmpeg / ffprobe 或设置 FFPROBE_BIN。')));
-   child.stdout.on('data',b=>out+=b);
-   child.on('close',code=>{try{const duration=Number(JSON.parse(out).format.duration);if(code||!Number.isFinite(duration)||duration<=0)throw new Error();finish(null,duration);}catch{finish(new Error('无法识别配音文件，请重新生成配音。'));}});
-  });
+  return await decodedAudioDuration(file);
  }finally{await rm(folder,{recursive:true,force:true});}
 }
 export function createVideoService(request=aiRequest,folder=directory,{audioInspector=inspectAudio,muxer=lockNarration,preflight=()=>mediaTool(process.env.FFMPEG_BIN||'ffmpeg',['-version'])}={}){

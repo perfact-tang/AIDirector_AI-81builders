@@ -8,9 +8,10 @@ test('TTS validates text/voice, returns audio metadata, and reports failures',as
  const post=b=>fetch(base+'/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
  try{
   const voices=await(await fetch(base+'/tts/voices')).json();assert.ok(voices.voices.some(v=>v.id==='zh-CN-XiaoxiaoNeural'));
-  for(const body of [{},{text:' ',voice:'zh-CN-XiaoxiaoNeural'},{text:'你好',voice:'invalid'},{text:'x'.repeat(5001),voice:'zh-CN-XiaoxiaoNeural'}])assert.equal((await post(body)).status,400);
+  for(const body of [{},{text:' ',voice:'zh-CN-XiaoxiaoNeural'},{text:'你好',voice:'invalid'},...[0,3,16,5.5,'5',null].map(seconds=>({text:'你好',voice:'zh-CN-XiaoxiaoNeural',seconds})),{text:'x'.repeat(5001),voice:'zh-CN-XiaoxiaoNeural'}])assert.equal((await post(body)).status,400);
   assert.equal(calls.length,0);
-  const res=await post({text:' 你好 ',voice:'zh-CN-XiaoxiaoNeural'});assert.equal(res.status,200);assert.equal((await res.json()).text,'你好');assert.equal(calls.length,1);
+  const res=await post({text:' 你好 ',voice:'zh-CN-XiaoxiaoNeural'});assert.equal(res.status,200);assert.equal((await res.json()).text,'你好');assert.equal(calls.length,1);assert.equal(calls[0].seconds,5);
+  const timed=await post({text:'按十秒处理',voice:'zh-CN-XiaoxiaoNeural',seconds:10});assert.equal(timed.status,200);assert.equal(calls[1].seconds,10);
   assert.equal((await post({text:'fail',voice:'zh-CN-XiaoxiaoNeural'})).status,502);
   assert.equal((await fetch(base+'/audio/not-valid.mp3')).status,404);
  }finally{await new Promise(r=>server.close(r));}

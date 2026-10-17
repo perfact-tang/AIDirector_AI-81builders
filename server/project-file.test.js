@@ -28,3 +28,11 @@ test('saving during resubmission preserves new ID and the previous completed med
  const state={drafts:[{prompt:'new',firstPrompt:'',seconds:5,revision:'new'}],jobs:{0:old},queue:[{index:0,revision:'new',body:{requestId:'unfinished-request-123',prompt:'do not submit',aspect:'16:9'}}],aspect:'16:9'};
  const output=snapshotProject(data,{video:state});const restored=restoreVideo(parseProjectFile(output));assert.equal(restored.jobs[0].id,'unfinished-request-123');assert.equal(restored.jobs[0].previous.url,video);assert.deepEqual(restored.queue,[]);assert.equal(state.jobs[0],old);assert.equal(state.jobs[0].id,'previous-request-123');assert.ok(!JSON.stringify(output.director_workspace).includes('do not submit'));
 });
+
+test('voice duration, speed and original source survive project JSON export and re-import',()=>{
+ const data=sample(),timing={duration:5,originalDuration:6.4,targetDuration:5,speed:1.28,durationChecked:true,adjusted:true,timingVersion:'tempo-fit-v1',sourceUrl:audio};
+ const voice={texts:['原台词'],voice:'zh-CN-XiaoxiaoNeural',clips:{0:{text:'原台词',voice:'zh-CN-XiaoxiaoNeural',dataUrl:'data:audio/mpeg;base64,aGk=',...timing}}};
+ const exported=snapshotProject(data,{voice});for(const project of [exported,{project:exported.project}]){
+  const clip=restoreVoice(parseProjectFile(project)).clips[0];for(const [key,value]of Object.entries(timing))assert.equal(clip[key],value);
+ }
+});

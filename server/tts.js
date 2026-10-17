@@ -1,8 +1,10 @@
 import express from 'express';
 import {createHash,randomUUID} from 'node:crypto';
 import {spawn} from 'node:child_process';
-import {mkdir,stat,rename,rm} from 'node:fs/promises';
+import {mkdir,stat,rename,rm,readFile,writeFile} from 'node:fs/promises';
 import path from 'node:path';
+import {fitVoice,validTarget,VOICE_TIMING_VERSION} from './voice-timing.js';
+import {decodedAudioDuration} from './media-tools.js';
 import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const directory=path.join(root,'.local/audio');
@@ -12,8 +14,8 @@ export const VOICES=[
  {id:'en-US-JennyNeural',name:'Jenny · 英文女声'}, {id:'en-US-GuyNeural',name:'Guy · 英文男声'},
  {id:'ko-KR-SunHiNeural',name:'SunHi · 韩文女声'}, {id:'ko-KR-InJoonNeural',name:'InJoon · 韩文男声'},
 ];
-export function validTts(body){return body && typeof body.text==='string' && body.text.trim().length>0 && body.text.length<=5000 && VOICES.some(v=>v.id===body.voice);}
-export async function synthesize({text,voice},{signal}={}) {
+export function validTts(body){return body && typeof body.text==='string' && body.text.trim().length>0 && body.text.length<=5000 && VOICES.some(v=>v.id===body.voice) && (body.seconds===undefined||validTarget(body.seconds));}
+export async function synthesizeRaw({text,voice},{signal}={}) {
  signal?.throwIfAborted();
  await mkdir(directory,{recursive:true});
  const id=createHash('sha256').update(JSON.stringify([voice,text.trim()])).digest('hex');
@@ -39,15 +41,34 @@ export async function synthesize({text,voice},{signal}={}) {
   return {url:`/api/audio/${id}.mp3`,voice,text:text.trim()};
  } finally {await rm(temporary,{force:true});}
 }
+export async function synthesize({text,voice,seconds=5},{signal}={}){
+ if(!validTarget(seconds))throw new Error('配音目标时长必须为 4–15 秒的整数。');
+ // Reuse the untouched TTS source when the target changes; no new online request is needed.
+ const raw=await synthesizeRaw({text,voice},{signal});
+ const source=path.join(directory,raw.url.split('/').pop());
+ const id=createHash('sha256').update(JSON.stringify([VOICE_TIMING_VERSION,raw.url,seconds])).digest('hex');
+ const output=path.join(directory,id+'.mp3'),metadata=path.join(directory,id+'.json');
+ try{
+  const saved=JSON.parse(await readFile(metadata,'utf8'));
+  if(saved.timingVersion===VOICE_TIMING_VERSION&&saved.targetDuration===seconds){
+   const file=saved.adjusted?output:source,duration=await decodedAudioDuration(file,{signal});
+   if(duration<=seconds&&Math.abs(duration-saved.duration)<0.0001)return {...raw,...saved,url:saved.adjusted?`/api/audio/${id}.mp3`:raw.url,sourceUrl:raw.url};
+  }
+ }catch(error){if(signal?.aborted)throw error;}
+ const timing=await fitVoice(source,output,seconds,{signal});
+ const temporary=metadata+'.'+randomUUID()+'.tmp';
+ try{signal?.throwIfAborted();await writeFile(temporary,JSON.stringify(timing));await rename(temporary,metadata);}finally{await rm(temporary,{force:true});}
+ return {...raw,...timing,url:timing.adjusted?`/api/audio/${id}.mp3`:raw.url,sourceUrl:raw.url};
+}
 export function ttsRouter(generate=synthesize){
  const router=express.Router();let active=0;
  router.get('/tts/voices',(_req,res)=>res.json({voices:VOICES}));
  router.post('/tts',async(req,res)=>{
-  if(!validTts(req.body))return res.status(400).json({error:'请选择支持的音色，并输入 1–5,000 字的台词。'});
+  if(!validTts(req.body))return res.status(400).json({error:'请选择支持的音色、4–15 秒的镜头时长，并输入 1–5,000 字的台词。'});
   if(active>=2)return res.status(429).json({error:'配音任务繁忙，请稍后重试。'});
   active++;const controller=new AbortController();
   const disconnect=()=>{if(!res.writableEnded)controller.abort();};res.on('close',disconnect);
-  try {const clip=await generate({text:req.body.text.trim(),voice:req.body.voice},{signal:controller.signal});if(!controller.signal.aborted)res.json(clip);}
+  try {const clip=await generate({text:req.body.text.trim(),voice:req.body.voice,seconds:req.body.seconds??5},{signal:controller.signal});if(!controller.signal.aborted)res.json(clip);}
   catch(e){if(!controller.signal.aborted&&!res.destroyed)res.status(502).json({error:e.message});}finally{res.off('close',disconnect);active--;}
  });
  router.get('/audio/:file',(req,res,next)=>{
