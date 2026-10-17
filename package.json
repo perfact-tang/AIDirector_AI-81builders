@@ -7,7 +7,10 @@
     "dev": "concurrently -k \"node --env-file=.env --watch server/index.js\" \"vite --host 127.0.0.1\"",
     "build": "vite build",
     "start": "node --env-file=.env server/index.js",
-    "test": "node --test server/*.test.js"
+    "test": "node --test server/*.test.js",
+    "skills:install": "node scripts/install-skills.mjs",
+    "skills:verify": "node scripts/install-skills.mjs --check",
+    "test:skills": "node skills/direct-h3-storyboards/scripts/test_validate.mjs"
   },
   "dependencies": {
     "express": "^5.1.0",
@@ -19,5 +22,8 @@
   "devDependencies": {
     "concurrently": "^9.2.0",
     "vite": "^7.1.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

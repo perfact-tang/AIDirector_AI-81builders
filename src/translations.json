@@ -1566,5 +1566,9 @@
   "本地音视频处理失败：{0}": {
     "en": "Local media processing failed: {0}",
     "ja": "ローカルのメディア処理に失敗しました：{0}"
+  },
+  "导演 Skill 文件缺失，请运行 npm run skills:install，或检查 DIRECTOR_SKILL_PATH。": {
+    "en": "Director Skill files are missing. Run npm run skills:install or check DIRECTOR_SKILL_PATH.",
+    "ja": "ディレクター Skill のファイルがありません。npm run skills:install を実行するか、DIRECTOR_SKILL_PATH を確認してください。"
   }
 }

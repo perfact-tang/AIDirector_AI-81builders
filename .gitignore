@@ -152,3 +152,8 @@ vite.config.ts.timestamp-*
 .venv/
 .local/
 __pycache__/
+
+# Generated project exports and test output (keep runtime assets out of source control)
+/artifacts/
+/director-project*.json
+.DS_Store

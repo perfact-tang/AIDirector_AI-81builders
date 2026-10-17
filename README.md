@@ -1,112 +1,228 @@
-# AI DIRECTOR · 导演台
+# AI Director
 
-React + Vite 前端，Express 本地后端，通过 `aiand run` 调用 DeepSeek 并执行本地导演 skill 的完整指令。
+A local director's workspace that turns an idea into a storyboard, voiceovers, and animated shots.
 
-## 启动
+Choose a visual style and pacing, describe your idea, and let AI draft the production plan. Review characters, generate and time-fit narration, then create videos with your narration and character images as references.
 
-需要 Node.js 22.12+、本地 `aiand` CLI 和 `direct-h3-storyboards` skill。
+Built with **React, Vite, Express, Edge TTS, FFmpeg, and ai&**. The interface supports **Simplified Chinese, English, and Japanese**.
+
+## Requirements
+
+Install these tools before starting:
+
+| Tool | Requirement |
+| --- | --- |
+| Node.js and npm | Node.js **22.12 or newer** |
+| ai& CLI | `aiand` available on your `PATH` |
+| Python | Python 3 with `venv` and `pip`, for Edge TTS |
+| FFmpeg | `ffmpeg` and `ffprobe` available on your `PATH`; MP3 encoding requires `libmp3lame` |
+| ai& account | An API key with access to the configured text and video models |
+
+Install the ai& CLI using its [official installation instructions](https://docs.aiand.com/cli/):
+
+```sh
+npm install -g @aiand/cli
+aiand --version
+```
+
+The app supplies `AIAND_API_KEY` from `.env` to the CLI, so a separate `aiand login` is not required for this workflow.
+
+The commands below use a macOS/Linux shell. On Windows, use a WSL environment with these dependencies installed inside WSL.
+
+## Quick start
+
+Run all commands from the project root.
+
+### 1. Install dependencies and the project Skill
 
 ```sh
 npm install
-cp .env.example .env
-# 在 .env 填入 AIAND_API_KEY（已有 .env 时不要覆盖）
-npm run dev
+npm run skills:install
+npm run skills:verify
 ```
 
-打开 http://127.0.0.1:5173/ 。生产运行：`npm run build`，然后 `npm start`，访问 http://127.0.0.1:3001/ 。
+The required **`direct-h3-storyboards`** Skill is included in [`skills/direct-h3-storyboards/`](skills/direct-h3-storyboards/). The installer copies its instructions, references, JSON template, validator, tests, and agent metadata into:
 
-## 生成链路
+```text
+.local/skills/direct-h3-storyboards/
+```
 
-1. `POST /api/scripts` 校验画风、每镜头秒数与源文，返回异步任务 ID。
-2. 后端读取 skill 的 SKILL.md、四份必读参考、项目模板，通过固定参数的 `spawn` 调用 `aiand run --model deepseek-ai/deepseek-v4.1-flash`。源文通过 stdin 传入，无 shell 拼接。
-3. CLI 的一次性推理接口不自动发现 skill，因此由后端显式加载完整 skill 上下文；本地校验脚本由后端执行。
-4. 解析模型 JSON，运行 skill 自带 `validate_storyboard.mjs`，验证所有镜头符合所选时长。失败最多修正两次，每次修正都会调用模型。
-5. `GET /api/scripts/:id` 返回进度、错误或通过校验的完整 JSON。网页展示创作方案、人物、声音、可搜索分镜，并支持下载 JSON。
+No personal or global Skills directory is required. Skill installation is local and makes no network requests. After updating the bundled Skill, run `npm run skills:install` again.
 
-`.env` 被 Git 忽略，仅后端加载；不要使用 VITE_ 前缀保存密钥。可通过 `AIAND_BIN`、`DIRECTOR_SKILL_PATH` 指定 CLI 和 skill 路径。默认 skill 路径为 `~/.agents/skills/direct-h3-storyboards`。
-
-草稿保存在 localStorage，当前任务 ID 保存在 sessionStorage，刷新页面可恢复查询。任务及结果仅存于后端内存，服务重启后丢失；完成任务保留最多约一小时（新提交时清理）。请及时下载结果。每次仅执行一个生成任务，模型请求最多等待 15 分钟，完整任务最多三次模型调用。CLI 错误不会向浏览器泄露原始错误或密钥。
-
-## 验证
-
-`npm test` 验证异步任务、失败返回、源文组合、截断检测和跨站提交拦截；使用 mock 避免测试消耗模型额度。`npm run build` 验证前端构建。实际模型调用需通过网页提交。
-
-## 页面流程
-
-- `/` 填写创作需求。
-- `/processing?job=<id>` 显示处理阶段、已用时间和真实阶段记录；刷新后继续查询。
-- `/project?job=<id>` 展示已完成的方案、人物、声音和分镜；可返回修改需求。
-
-任务 API 包含 `events: [{stage, at}]`，记录真实阶段切换。模型调用采用非流式 JSON 返回，生成内部的逐步进度不可见，因此页面不会显示虚构百分比。
-
-## 人物图片与朗读
-
-结果页默认展示人物。复制人物提示词，在外部服务生成图片后可上传 PNG/JPG/WebP（最大 10 MB），预览后点击“保存图片”。图片按项目和人物隔离存入当前浏览器的 IndexedDB；清除网站数据会删除本地图片，下载项目 JSON 可携带已保存图片备份。未点击保存的预览不会写入存储或导出文件。
-
-声音设计展示逐镜头台词，支持全部顺序朗读、逐条朗读、暂停/继续与停止，并跳过无对白镜头。朗读复用参考站点的 Web Speech 实现，使用设备内置语音；可选中文、日文、英文、韩文。语音不可用或尚未加载时显示提示，切换页面或语言会停止当前朗读。
-
-## Edge TTS 配音生成
-
-后端使用项目 Python 虚拟环境调用 Edge TTS，将台词通过 stdin 传入，不使用 shell 拼接。
+Set up the Python environment used for voice generation:
 
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-tts.txt
 ```
 
-声音设计页提供可编辑台词（每条最多 5,000 字）、中/日/英/韩男女音色、逐条生成与按顺序生成全部配音。空台词跳过；批量失败可逐条重试。生成时显示进度，禁止同时修改台词；改词或更换音色后旧音频仍可试听，但会标记过期且不会作为最新配音导出。
+Verify that the media tools are installed:
 
-`POST /api/tts` 接收 `{text,voice}`，返回 MP3 地址；`GET /api/tts/voices` 返回支持音色。最多两个并发请求，每条超时 90 秒。MP3 按文本与音色的哈希缓存在 `.local/audio/`，该目录和 `.venv/` 均不会提交 Git。可用 `EDGE_TTS_PYTHON` 指定其他 Python 环境。
+```sh
+ffmpeg -version
+ffprobe -version
+```
 
-台词和音频会持久化至浏览器 IndexedDB，下载的项目 JSON 携带修改后的台词和未过期的内嵌音频。Edge TTS 使用 Microsoft 在线服务，需要网络；文本会发送至该服务。生成音频不会自动裁剪或拉伸到镜头长度。设备内置语音的朗读功能仍可独立使用。
+### 2. Add your API key to `.env`
 
-## MiniMax H3 动画与 ZIP
+Create the local environment file:
 
-分镜页提供可编辑的分镜提示词与首帧提示词、逐镜头生成、顺序批量生成、右侧 MP4 预览和动画 ZIP 下载。声音页提供已生成配音 ZIP 下载。打包使用浏览器本地 fflate，不向第三方上传文件；为限制内存，每次最多打包 512 MB，失败不会静默遗漏文件。
+```sh
+cp -n .env.example .env
+```
 
-后端直接使用 ai& Videos REST API，模型固定为 `minimaxai/minimax-h3`，通过服务端 `AIAND_API_KEY` 鉴权。输出为 768p 带音轨 MP4，不发送不受支持的 resolution 参数。画幅必填，镜头可选 4–15 秒；页面从模型目录读取当前账户价格。提交视频不能撤销，完成才收费。视频权限需用户本人先在 ai& 控制台接受服务条款，应用只检查状态，不代替用户同意条款。
+Open `.env` and replace the placeholder:
 
-- `GET /api/videos/config` 查询接受状态与报价。
-- `POST /api/videos` 接收客户端唯一 `requestId`、`prompt`、`firstPrompt`、`seconds`、`aspect`，以及可选的 `image` / `audio` base64 data URL。
-- `GET /api/videos/:id` 查询任务，最多每 15 秒向上游刷新一次。审核、翻译、排队、生成、失败均展示真实状态。
-- `GET /api/videos/:id/content` 播放或下载已缓存的 MP4，支持 Range。
+```dotenv
+AIAND_API_KEY=your-aiand-api-key
+```
 
-生成统一采用配音优先的 `references.images` + `references.audio`。当前镜头的已生成配音为主要参考；分镜提示词中出现的人物姓名或别名会匹配人物展示中已保存的图片，按首次提及顺序上传，并写出明确的 `<Picture N>` 映射。角色缺图时不会提交。无人物镜头需手动上传场景参考图，满足音频必须有视觉参考的接口限制。首帧提示词仅作为画面构图补充，不会自动生成图片。
+Keep an existing `.env` if you have already configured it. The file is ignored by Git and loaded only by the backend. Do not put API keys in a `VITE_` variable: those variables can be exposed in the browser bundle.
 
-任务记录和 MP4 持久化在 Git 忽略的 `.local/videos/`。客户端草稿、批量队列和任务编号保存在 IndexedDB。刷新后使用相同编号继续查询/处理，后端不会重复提交相同编号的收费任务。网络中断时批量暂停，可点击继续，仍复用原任务编号。若提交结果不确定，需先在 ai& 控制台核对，不应盲目新建任务。上游失败会显示错误并可手动重试。
+Optional overrides are documented in [`.env.example`](.env.example):
 
-配音是必需输入，不能回退到 H3 重新配音。后端先用 ffprobe 检查音频时长，超过所选镜头时长则在上传与收费提交前报错；请延长镜头（最多 15 秒）或拆分台词。模型提示要求画面、口型、动作以配音为主，人物图片仅控制身份与外观；模型返回的声音仅作原始输出保留；最终 MP4 会通过 FFmpeg 使用用户原始配音重新制作音轨（转 AAC，尾部补静音），视频画面使用 stream copy，不重新编码。这样不会把模型生成的其他声音当作用户原配音。项目导出包含修改后的提示词、本机视频路径、参考版本与匹配人物；长期备份请使用动画 ZIP。
+| Variable | Purpose |
+| --- | --- |
+| `AIAND_BIN` | Path to the `aiand` executable |
+| `DIRECTOR_SKILL_PATH` | A custom `direct-h3-storyboards` directory; relative paths resolve from the project root |
+| `EDGE_TTS_PYTHON` | Python executable with `edge-tts` installed; defaults to `.venv/bin/python` |
+| `FFMPEG_BIN` | Path to `ffmpeg` for narration checks, speed adjustment, and final video audio |
+| `FFPROBE_BIN` | Path to `ffprobe` for video duration checks |
 
-官方接口文档：https://docs.aiand.com/api/videos/
+The default text model is `deepseek-ai/deepseek-v4.1-flash`; video generation uses `minimaxai/minimax-h3` through the [ai& Videos API](https://docs.aiand.com/api/videos/).
 
-## 项目 JSON 存档与恢复
+### 3. Start the app
 
-入口页点击“读取项目 JSON”可直接打开已保存项目，不调用脚本模型、配音生成或收费视频提交接口。兼容此前下载的 mv-maker-project JSON，以及包含 direction_name / characters / storyboard 的旧式独立项目对象。文件上限 100 MB。
+```sh
+npm run dev
+```
 
-方案页的“保存项目 JSON”包含最新台词、分镜与首帧提示词、人物图片、音色、内嵌配音、本地动画路径、动画任务 ID / 上游 ID、画幅、秒数、首帧参考图片和过期状态所需的版本信息。新增 `director_workspace` 字段保留编辑器工作状态；通用 project 字段也同步最新文本和素材。图片需点击保存后进入存档。
+Open **[http://127.0.0.1:5173/](http://127.0.0.1:5173/)**.
 
-导入项目使用 `/project?local=<id>`，保存在当前浏览器 IndexedDB，刷新可继续编辑。每次导入使用独立工作区，避免被同名项目的旧缓存覆盖。导入存档不会恢复收费 POST 队列；未完成动画仅通过 GET 查询原任务编号，尚未提交的排队镜头需要手动生成。读取文件、打开已有动画、导出 JSON 和 ZIP 均不重新生成素材。
+This command starts both services:
 
-MP4 不内嵌在 JSON，以免文件过大；它的 `/api/videos/<id>/content` 路径依赖原电脑项目下 `.local/videos/` 的 MP4 与任务记录。系统升级时请保留 `.local` 目录，并同时下载动画 ZIP 作为独立备份；移动电脑时仅有 JSON 不能恢复已删除的 MP4 文件。音频路径也会保存，已内嵌的配音无需原音频缓存即可播放。素材路径失效时页面提示检查原本机文件，不自动重新生成。
+- **Vite frontend:** `http://127.0.0.1:5173`
+- **Express backend:** `http://127.0.0.1:3001`
 
-### 配音优先视频依赖与版本检测
+The frontend proxies `/api` requests to the local backend. Keep the terminal running while using the app. Both services are intended for local use.
 
-需要本机提供 FFmpeg 的 `ffprobe`（macOS 可通过 `brew install ffmpeg` 安装），或在 `.env` 配置 `FFPROBE_BIN=/absolute/path/to/ffprobe`。当前机器已安装并验证读取实际 MP3。
+## Creating a project
 
-人物姓名匹配支持中英文混排、括号中的别名和可选的 `characters[].aliases` 数组，避免 Ann/Anna 等子串误匹配。多人物参考最多 9 张（包含可选场景图）；所有被点名的人物必须有已保存的 PNG/JPEG/WebP 图片。已生成的配音必须与当前台词、音色一致。只有本地路径的旧配音会先读取为可上传的音频数据，无需重新配音。
+1. **Write the brief.** Choose realistic 3D, Japanese anime, or 2.5D, then choose a 5- or 10-second shot pace and enter your idea.
+2. **Generate the script.** The app loads the director Skill, invokes the ai& CLI, and validates the returned project JSON. A dedicated processing screen shows actual task stages.
+3. **Prepare characters.** Copy a character's image prompt, generate the image in your preferred external service, upload it, and click **Save image**. The app does not generate character images itself.
+4. **Generate voiceovers.** Edit each shot's dialogue, choose a voice, and generate individual recordings or the full list.
+5. **Generate videos.** Review shot prompts, first-frame prompts, duration, and aspect ratio. Each video uses its current narration and the saved images of characters named in the prompt. A shot without characters needs a scene reference image.
+6. **Preview and export.** Use the sequential audio/video players, download generated files as ZIP archives, and save the project JSON.
 
-配音或人物图片变化会改变 `referenceKey`，旧动画显示需要重新生成。JSON 存档保留该版本与人物名称。旧版没有配音的人物/纯文本视频仍可播放、下载，不自动再生成；旧收费提交队列迁移为只读任务查询。批量生成只处理所需素材齐全的镜头，缺失项在各镜头下明确提示。
+### Automatic voice duration fitting
 
-### 人物冲突与音轨锁定修复
+Every newly generated voiceover is checked against the shot's current duration, including duration changes made in the storyboard workspace.
 
-执行提示词编译为“图片身份优先 + 场景动作”：对旧 skill 文本提取 detailed_description / integrated_multimodal_description，不再发送可能与新上传图片冲突的 subject_definitions 与 retention_analysis 外貌描述。图片为人物性别、发色、服装等身份依据；有效提示词可在页面展开查看。模型人物一致性仍需预览核对，图片参考并非自动身份验证。
+- Audio that already fits stays at its original speed.
+- Overlong audio is accelerated with FFmpeg's `atempo` filter. The initial speed multiplier is **original duration / target duration**.
+- The result is measured again and corrected if needed. A small silent tail fills any remaining gap so the adjusted recording reaches the target duration; spoken content is not cut to force a fit.
+- The interface shows the original duration, final duration, and applied speed. These values are included in the exported project JSON.
+- Duration checks use decoded audio samples, avoiding false failures caused by MP3 encoder padding. The same measurement is used before video submission and when restoring narration into the final video.
 
-每个新任务记录实际 submittedRequest、Files API 文件 ID、人物名单及输入文件 SHA-256。生成完成后缓存 `.provider.mp4` 原始返回，再通过 `.narration.mp3` 原始配音制作最终 `.mp4`；混流失败会重试本地处理，不新建收费任务。`audioLocked: true` / `audioPolicy: original-narration-v2` 表示最终输出已使用原始配音，而非模型返回的音轨。
+Original TTS files are retained in the local cache. Changing a target duration can reuse the original recording rather than requesting the same text and voice again. Existing recordings are checked when you regenerate them.
 
-旧视频可点击“使用当前配音修复音轨（免费）”，对应 `POST /api/videos/:id/restore-narration`，只做本机 FFmpeg 处理；保留原始画面与 provider 备份，不调用视频生成。音频超过原视频长度时拒绝修复，避免截断台词。可使用 FFMPEG_BIN 指定 FFmpeg。人物参考变化或提示词编译规则升级后，旧动画会显示过期，需用户主动决定是否重新生成。
+### Video generation and stopping
 
-### 界面语言
+Batch video generation offers two modes:
 
-右下角语言按钮支持简体中文、English 和日本語，选择保存在浏览器的 `director-language` 中。语言切换即时生效，不会重载项目或重新提交生成任务；故事、人物资料、提示词、台词及导出的项目数据保留原文，配音音色和朗读语言也独立于界面语言。
+- **Continue generation:** keep previous results and generate missing or modified shots.
+- **Regenerate from scratch:** regenerate all eligible shots, retaining old videos until replacements succeed.
 
-界面词条集中在 `src/translations.json`，`src/i18n.js` 处理动态数量与状态提示的插值，`src/LanguageProvider.jsx` 提供语言状态与切换入口。新增界面文案时通过 `useI18n()` 的 `t()` 展示，并补充英文、日文词条；不要将用户输入、生成提示词或完整项目 JSON 交给界面翻译。`npm test` 会检查译文完整性和插值占位符一致性。
+Generation dialogs show per-item status. Stopping voice generation also cancels the active local worker. For video, stopping prevents further submissions; tasks already submitted to ai& cannot be canceled and may continue processing. Existing task IDs are retained for recovery.
+
+Video generation can incur API charges. Review the account pricing shown in the workspace. Before generating videos, accept the video service terms yourself in the ai& console if required.
+
+The final MP4 uses the generated narration as its audio track. FFmpeg preserves the video's encoded picture stream while restoring the narration; provider-original video files are retained locally.
+
+## Saving and reopening work
+
+Use **Save project JSON** to export edited dialogue, prompts, character images, voiceovers, timing metadata, and video task IDs and paths. On the home screen, use **Load project JSON** to reopen it without submitting new generation requests.
+
+| Data | Storage |
+| --- | --- |
+| Brief and interface language | Browser local storage |
+| Uploaded images, workspace edits, and generated audio | Browser IndexedDB |
+| Original and adjusted MP3 files | `.local/audio/` |
+| Video task records, source videos, and final MP4 files | `.local/videos/` |
+| Installed Skill copy | `.local/skills/direct-h3-storyboards/` |
+
+Project JSON can carry saved character images and voiceovers. Videos remain separate local files: download the video ZIP and retain `.local/videos/` when moving to another computer. Clearing browser data removes browser-local drafts and workspace records.
+
+Script-generation task records are held in backend memory. Export a completed project before restarting the backend. Imported projects never automatically replay paid submission queues.
+
+The bottom-right language button switches between **简体中文 / English / 日本語** and remembers the selection. It changes interface copy only; dialogue, character names, prompts, project content, voice selection, and read-aloud language remain independent. The bundled director Skill intentionally generates Chinese production prompts while preserving the original language of names, dialogue, and lyrics.
+
+## How Skills are loaded
+
+The backend resolves the director Skill in this order:
+
+1. `DIRECTOR_SKILL_PATH`, when explicitly configured.
+2. The installed project copy in `.local/skills/direct-h3-storyboards/`.
+3. The bundled source in `skills/direct-h3-storyboards/`.
+
+The backend explicitly reads the Skill's instructions, required references, and project template into the model context, then runs `scripts/validate_storyboard.mjs` on the output. It does not rely on automatic Skill discovery by the CLI.
+
+See [`skills/README.md`](skills/README.md) for the included files, installation behavior, and standalone validation instructions. The Skill also describes broader voice/music planning workflows; this app currently executes Edge TTS and ai& MiniMax H3, not those additional generators.
+
+## Development commands
+
+```sh
+npm run dev            # Run the frontend and backend with file watching
+npm run skills:install # Install the bundled Skill in this project
+npm run skills:verify  # Compare the installed Skill with the bundled files
+npm test               # Run application regression tests
+npm run test:skills    # Run the bundled storyboard-validator tests
+npm run build          # Build the frontend into dist/
+npm start              # Serve the built frontend and API on port 3001
+```
+
+For a local production build, run `npm run build` followed by `npm start`, then open **http://127.0.0.1:3001/**.
+
+Application tests use mocks or local media fixtures instead of calling paid generation services. FFmpeg media tests require FFmpeg.
+
+## Troubleshooting
+
+| Problem | What to check |
+| --- | --- |
+| Missing Skill or reference files | Run `npm run skills:install` and `npm run skills:verify`; check any `DIRECTOR_SKILL_PATH` override. |
+| `aiand` cannot start | Run `aiand --version`; check your `PATH` or set `AIAND_BIN`. |
+| Script generation fails | Check the backend's `AIAND_API_KEY`, model access, and network connection. Validation can trigger up to two model retries. |
+| Edge TTS cannot start | Reinstall `requirements-tts.txt` into `.venv`, or point `EDGE_TTS_PYTHON` to the correct environment. |
+| Duration fitting or video audio processing fails | Check `ffmpeg -version`, `ffprobe -version`, and the corresponding environment overrides. |
+| No video generation access | Check your ai& account balance, model access, and video service terms. |
+| An imported video is unavailable | Restore its original `.local/videos/` files or use the downloaded MP4 backup. Import does not regenerate it. |
+| A video submission has an uncertain status | Check the ai& console before creating another task to avoid duplicate submissions. |
+
+## Repository layout
+
+```text
+src/                         React interface, translations, and workspace logic
+server/                      Local API, CLI integration, media processing, and tests
+skills/direct-h3-storyboards/ Bundled director Skill and validator
+scripts/install-skills.mjs   Project-local Skill installation and verification
+.env.example                 Environment template without credentials
+requirements-tts.txt         Python dependency for Edge TTS
+.local/                      Local runtime files and generated media (Git-ignored)
+```
+
+## Publishing the source
+
+Include `skills/`, `scripts/`, application source, tests, lockfile, `.env.example`, and this README. Keep your real `.env`, `.venv/`, `node_modules/`, `.local/`, and generated project exports private. Script briefs go to ai&, voiceover text goes to Microsoft's Edge TTS service, and video reference media goes to ai& when generation is requested.
+
+Check already tracked files before making the repository public:
+
+```sh
+git ls-files .env .local .venv artifacts
+```
+
+Ignore rules do not remove files that are already tracked or erase earlier commits. Review any existing generated videos, project JSON, prompt notes, or credentials in the repository history before changing its visibility.
+
+## License
+
+[Apache License 2.0](LICENSE).
