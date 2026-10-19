@@ -1,3 +1,4 @@
+import {normalizeProject} from './project-contract.js';
 import {dialogue} from './speech.js';
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 export function mediaSource(value,type){
@@ -53,7 +54,9 @@ export function parseProjectFile(input){
  if(p.director_plan!=null&&(!object(p.director_plan)||['style_name','aspect_ratio'].some(k=>p.director_plan[k]!=null&&typeof p.director_plan[k]!=='string')||(p.director_plan.total_duration_seconds!=null&&!['string','number'].includes(typeof p.director_plan.total_duration_seconds))))throw new Error('导演计划格式无效。');
  if(p.characters.length>200||shotsOf(root).length>2000)throw new Error('项目过大：最多支持 200 位人物、2,000 个镜头。');
  const { _localId, ...safeRoot }=root;
- const normalized={...safeRoot,project:{...p,characters:p.characters.map(c=>({...c,description:c.description||''}))}};
+ const normalized=normalizeProject({...safeRoot,project:{...p,characters:p.characters.map(c=>({...c,description:c.description||''}))}});
+ const ids=normalized.project.characters.map(c=>c.character_id);if(new Set(ids).size!==ids.length||ids.some(id=>typeof id!=='string'||!/^CHAR-[\w-]+$/.test(id)))throw new Error('人物 ID 重复或格式无效。');
+ for(const shot of shotsOf(normalized))if(shot.character_refs!==undefined&&(!Array.isArray(shot.character_refs)||new Set(shot.character_refs).size!==shot.character_refs.length||shot.character_refs.some(id=>!ids.includes(id))))throw new Error('镜头人物引用包含重复或不存在的 ID。');
  if(root.director_workspace!=null&&!object(root.director_workspace))throw new Error('项目工作区记录格式无效。');
  normalized.director_workspace={version:1,...root.director_workspace,voice:restoreVoice(normalized),video:restoreVideo(normalized)};
  return normalized;

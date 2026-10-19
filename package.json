@@ -6,15 +6,19 @@
   "scripts": {
     "dev": "concurrently -k \"node --env-file=.env --watch server/index.js\" \"vite --host 127.0.0.1\"",
     "build": "vite build",
-    "start": "node --env-file=.env server/index.js",
+    "start": "node --env-file-if-exists=.env server/index.js",
     "test": "node --test server/*.test.js",
     "skills:install": "node scripts/install-skills.mjs",
     "skills:verify": "node scripts/install-skills.mjs --check",
     "test:skills": "node skills/direct-h3-storyboards/scripts/test_validate.mjs"
   },
   "dependencies": {
+    "@google-cloud/tasks": "^7.3.0",
     "express": "^5.1.0",
     "fflate": "^0.8.3",
+    "firebase": "^13.0.0",
+    "firebase-admin": "^14.5.0",
+    "google-auth-library": "^11.3.1",
     "lucide-react": "^0.468.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
@@ -25,5 +29,8 @@
   },
   "engines": {
     "node": ">=22.12.0"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.6"
   }
 }

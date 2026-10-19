@@ -12,7 +12,7 @@ test('a fresh clone installs all Skill files locally and loads context without a
   assert.equal(resolveSkillPath({root,override:''}),path.join(root,'skills',SKILL_NAME));
   const installed=await installSkills({root});assert.equal(installed.count,SKILL_FILES.length);assert.equal(resolveSkillPath({root,override:''}),installed.destination);
   assert.equal((await installSkills({root,check:true})).count,SKILL_FILES.length);
-  const context=await loadSkillContext(installed.destination);for(const heading of ['### SKILL.md','### references/h3-routing.md','### assets/storyboard-template.json'])assert.ok(context.includes(heading));
+  const context=await loadSkillContext(installed.destination);for(const heading of ['### SKILL.md','### references/app-contract.md','### assets/app-project-template.json'])assert.ok(context.includes(heading));
   assert.ok(!context.includes('/Users/'));
   await writeFile(path.join(installed.destination,'references/examples.md'),'modified local copy');await assert.rejects(installSkills({root,check:true}),/differs/);
   await installSkills({root});assert.equal((await installSkills({root,check:true})).count,SKILL_FILES.length);

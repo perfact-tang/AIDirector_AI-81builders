@@ -26,7 +26,7 @@ export async function prepareContinuityRequest(entry,{jobs,characters,sources,ex
  signal?.throwIfAborted();const source=previousVideo(jobs,entry.index);
  if(!source)throw new Error('上一镜头尚未生成成功，已暂停当前及后续生成。请先完成上一镜头。');
  const frame=await extractFrame(source.url,{signal});signal?.throwIfAborted();
- const plan=referencePlan(entry.body.prompt,characters,sources,{dataUrl:entry.body.audio},frame.image);
+ const plan=referencePlan(entry.body.prompt,characters,sources,{dataUrl:entry.body.audio},frame.image,entry.body.characterRefs);
  if(plan.problems.length)throw new Error(plan.problems.join(' '));
  const previousFrame={...frame,sourceUrl:source.url,sourceKey:source.key,sourceIndex:source.index};
  const {image,...continuity}=previousFrame;

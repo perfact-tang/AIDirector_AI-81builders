@@ -60,7 +60,7 @@ export async function synthesize({text,voice,seconds=5},{signal}={}){
  try{signal?.throwIfAborted();await writeFile(temporary,JSON.stringify(timing));await rename(temporary,metadata);}finally{await rm(temporary,{force:true});}
  return {...raw,...timing,url:timing.adjusted?`/api/audio/${id}.mp3`:raw.url,sourceUrl:raw.url};
 }
-export function ttsRouter(generate=synthesize){
+export function ttsRouter(generate=synthesize,{store}={}){
  const router=express.Router();let active=0;
  router.get('/tts/voices',(_req,res)=>res.json({voices:VOICES}));
  router.post('/tts',async(req,res)=>{
@@ -68,11 +68,12 @@ export function ttsRouter(generate=synthesize){
   if(active>=2)return res.status(429).json({error:'配音任务繁忙，请稍后重试。'});
   active++;const controller=new AbortController();
   const disconnect=()=>{if(!res.writableEnded)controller.abort();};res.on('close',disconnect);
-  try {const clip=await generate({text:req.body.text.trim(),voice:req.body.voice,seconds:req.body.seconds??5},{signal:controller.signal});if(!controller.signal.aborted)res.json(clip);}
+  try {const clip=await generate({text:req.body.text.trim(),voice:req.body.voice,seconds:req.body.seconds??5},{signal:controller.signal});if(store){for(const url of new Set([clip.url,clip.sourceUrl].filter(Boolean)))await store.upload('audio/'+url.split('/').pop(),path.join(directory,url.split('/').pop()),'audio/mpeg');}if(!controller.signal.aborted)res.json(clip);}
   catch(e){if(!controller.signal.aborted&&!res.destroyed)res.status(502).json({error:e.message});}finally{res.off('close',disconnect);active--;}
  });
- router.get('/audio/:file',(req,res,next)=>{
+ router.get('/audio/:file',async(req,res,next)=>{
   if(!/^[a-f0-9]{64}\.mp3$/.test(req.params.file))return res.status(404).json({error:'音频不存在。'});
+  if(store){try{await store.download('audio/'+req.params.file,path.join(directory,req.params.file));}catch{return res.status(404).json({error:'音频不存在。'});}}
   res.type('audio/mpeg').sendFile(path.join(directory,req.params.file),{dotfiles:'allow'},error=>{if(error&&!res.headersSent)res.status(404).json({error:'音频不存在，请重新生成。'});});
  });
  return router;

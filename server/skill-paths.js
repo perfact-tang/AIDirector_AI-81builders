@@ -9,8 +9,9 @@ export const SKILL_FILES=[
  'references/directing-playbook.md','references/character-reference-sheets.md',
  'references/project-schema.md','references/h3-routing.md','references/examples.md',
  'scripts/validate_storyboard.mjs','scripts/test_validate.mjs',
+ 'scripts/project_contract.mjs','scripts/validate_app_project.mjs','references/app-contract.md','assets/app-project-template.json',
 ];
-export const CONTEXT_FILES=['SKILL.md','references/directing-playbook.md','references/character-reference-sheets.md','references/project-schema.md','references/h3-routing.md','assets/storyboard-template.json'];
+export const CONTEXT_FILES=['SKILL.md','references/app-contract.md','assets/app-project-template.json'];
 export function resolveSkillPath({root=PROJECT_ROOT,override=process.env.DIRECTOR_SKILL_PATH}={}){
  if(override)return path.resolve(root,override);
  const installed=path.join(root,'.local/skills',SKILL_NAME);

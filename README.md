@@ -15,19 +15,11 @@ Install these tools before starting:
 | Tool | Requirement |
 | --- | --- |
 | Node.js and npm | Node.js **22.12 or newer** |
-| ai& CLI | `aiand` available on your `PATH` |
 | Python | Python 3 with `venv` and `pip`, for Edge TTS |
 | FFmpeg | `ffmpeg` and `ffprobe` available on your `PATH`; MP3 encoding requires `libmp3lame` |
 | ai& account | An API key with access to the configured text and video models |
 
-Install the ai& CLI using its [official installation instructions](https://docs.aiand.com/cli/):
-
-```sh
-npm install -g @aiand/cli
-aiand --version
-```
-
-The app supplies `AIAND_API_KEY` from `.env` to the CLI, so a separate `aiand login` is not required for this workflow.
+The backend calls the ai& HTTPS API with `AIAND_API_KEY`; an aiand installation or interactive login is unnecessary. The Cloud Run container includes the remaining runtime tools.
 
 The commands below use a macOS/Linux shell. On Windows, use a WSL environment with these dependencies installed inside WSL.
 
@@ -85,7 +77,6 @@ Optional overrides are documented in [`.env.example`](.env.example):
 
 | Variable | Purpose |
 | --- | --- |
-| `AIAND_BIN` | Path to the `aiand` executable |
 | `DIRECTOR_SKILL_PATH` | A custom `direct-h3-storyboards` directory; relative paths resolve from the project root |
 | `EDGE_TTS_PYTHON` | Python executable with `edge-tts` installed; defaults to `.venv/bin/python` |
 | `FFMPEG_BIN` | Path to `ffmpeg` for narration checks, speed adjustment, and final video audio |
@@ -111,7 +102,7 @@ The frontend proxies `/api` requests to the local backend. Keep the terminal run
 ## Creating a project
 
 1. **Write the brief.** Choose realistic 3D, Japanese anime, or 2.5D, then choose a 5- or 10-second shot pace and enter your idea.
-2. **Generate the script.** The app loads the director Skill, invokes the ai& CLI, and validates the returned project JSON. A dedicated processing screen shows actual task stages.
+2. **Generate the script.** The app loads the director Skill, calls the ai& HTTPS API, and validates the returned project JSON. A dedicated processing screen shows actual task stages.
 3. **Prepare characters.** Copy a character's image prompt, generate the image in your preferred external service, upload it, and click **Save image**. The app does not generate character images itself.
 4. **Generate voiceovers.** Edit each shot's dialogue, choose a voice, and generate individual recordings or the full list.
 5. **Generate videos.** Review shot prompts, first-frame prompts, duration, and aspect ratio. Each video uses its current narration and the saved images of characters named in the prompt. A shot without characters needs a scene reference image.
@@ -164,7 +155,7 @@ Use **Save project JSON** to export edited dialogue, prompts, character images, 
 | Video task records, source videos, and final MP4 files | `.local/videos/` |
 | Installed Skill copy | `.local/skills/direct-h3-storyboards/` |
 
-Project JSON can carry saved character images and voiceovers. Videos remain separate local files: download the video ZIP and retain `.local/videos/` when moving to another computer. Clearing browser data removes browser-local drafts and workspace records.
+In local-only mode, project JSON can carry saved character images and voiceovers. Videos remain separate local files: download the video ZIP and retain `.local/videos/` when moving to another computer. Clearing browser data removes browser-local drafts and workspace records.
 
 Script-generation task records are held in backend memory. Export a completed project before restarting the backend. Imported projects never automatically replay paid submission queues.
 
@@ -178,9 +169,9 @@ The backend resolves the director Skill in this order:
 2. The installed project copy in `.local/skills/direct-h3-storyboards/`.
 3. The bundled source in `skills/direct-h3-storyboards/`.
 
-The backend explicitly reads the Skill's instructions, required references, and project template into the model context, then runs `scripts/validate_storyboard.mjs` on the output. It does not rely on automatic Skill discovery by the CLI.
+The backend explicitly reads the Skill's instructions, required references, and project template into the model context, then computes the timeline and runs `scripts/validate_app_project.mjs` on the output. It does not rely on automatic Skill discovery.
 
-See [`skills/README.md`](skills/README.md) for the included files, installation behavior, and standalone validation instructions. The Skill also describes broader voice/music planning workflows; this app currently executes Edge TTS and ai& MiniMax H3, not those additional generators.
+See [`skills/README.md`](skills/README.md) for the included files, installation behavior, and standalone validation instructions. The current Skill follows the actual form and runtime: stable character IDs, ordered shot references, Edge TTS and ai& MiniMax H3. Legacy full MV Maker references are retained separately.
 
 ## Development commands
 
@@ -203,7 +194,7 @@ Application tests use mocks or local media fixtures instead of calling paid gene
 | Problem | What to check |
 | --- | --- |
 | Missing Skill or reference files | Run `npm run skills:install` and `npm run skills:verify`; check any `DIRECTOR_SKILL_PATH` override. |
-| `aiand` cannot start | Run `aiand --version`; check your `PATH` or set `AIAND_BIN`. |
+| Director API fails | Check `AIAND_API_KEY`, model access and network connectivity. |
 | Script generation fails | Check the backend's `AIAND_API_KEY`, model access, and network connection. Validation can trigger up to two model retries. |
 | Edge TTS cannot start | Reinstall `requirements-tts.txt` into `.venv`, or point `EDGE_TTS_PYTHON` to the correct environment. |
 | Duration fitting or video audio processing fails | Check `ffmpeg -version`, `ffprobe -version`, and the corresponding environment overrides. |
@@ -215,7 +206,7 @@ Application tests use mocks or local media fixtures instead of calling paid gene
 
 ```text
 src/                         React interface, translations, and workspace logic
-server/                      Local API, CLI integration, media processing, and tests
+server/                      Authenticated API, direct model calls, media processing, cloud workers and tests
 skills/direct-h3-storyboards/ Bundled director Skill and validator
 scripts/install-skills.mjs   Project-local Skill installation and verification
 .env.example                 Environment template without credentials
@@ -238,3 +229,7 @@ Ignore rules do not remove files that are already tracked or erase earlier commi
 ## License
 
 [Apache License 2.0](LICENSE).
+
+## Cloud Run / Firebase
+
+Cloud deployment supports existing Firebase Auth users, user-scoped Firebase Storage, cloud project save/restore, and authenticated Cloud Tasks workers. It scales to zero when idle. See [Cloud Run deployment and operations](docs/cloud-run.md) for provisioning, environment variables, security boundaries and redeployment commands.

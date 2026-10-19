@@ -1638,5 +1638,93 @@
   "尾帧参考准备失败：{0}": {
     "en": "Last-frame preparation failed: {0}",
     "ja": "最終フレームの準備に失敗しました：{0}"
+  },
+  "正在检查登录状态…": {
+    "en": "Checking sign-in…",
+    "ja": "ログイン状態を確認中…"
+  },
+  "登录导演工作台": {
+    "en": "Sign in to AI Director",
+    "ja": "AI Director にログイン"
+  },
+  "使用现有 Firebase 账号继续。": {
+    "en": "Continue with your existing Firebase account.",
+    "ja": "既存の Firebase アカウントで続行してください。"
+  },
+  "邮箱": {
+    "en": "Email",
+    "ja": "メールアドレス"
+  },
+  "密码": {
+    "en": "Password",
+    "ja": "パスワード"
+  },
+  "登录": {
+    "en": "Sign in",
+    "ja": "ログイン"
+  },
+  "正在登录…": {
+    "en": "Signing in…",
+    "ja": "ログイン中…"
+  },
+  "退出登录": {
+    "en": "Sign out",
+    "ja": "ログアウト"
+  },
+  "邮箱或密码不正确。": {
+    "en": "Incorrect email or password.",
+    "ja": "メールアドレスまたはパスワードが正しくありません。"
+  },
+  "我的云端项目": {
+    "en": "My cloud projects",
+    "ja": "クラウドのプロジェクト"
+  },
+  "刷新": {
+    "en": "Refresh",
+    "ja": "更新"
+  },
+  "生成方案后，项目会保存到云端。": {
+    "en": "Generated projects are saved to the cloud.",
+    "ja": "生成したプロジェクトはクラウドに保存されます。"
+  },
+  "正在读取云端项目…": {
+    "en": "Loading cloud project…",
+    "ja": "クラウドのプロジェクトを読み込み中…"
+  },
+  "保存到云端": {
+    "en": "Save to cloud",
+    "ja": "クラウドに保存"
+  },
+  "项目已保存到云端。": {
+    "en": "Project saved to cloud.",
+    "ja": "プロジェクトをクラウドに保存しました。"
+  },
+  "项目已自动保存到云端。": {
+    "en": "Project saved automatically to cloud.",
+    "ja": "プロジェクトをクラウドに自動保存しました。"
+  },
+  "图片已保存到云端，下载项目 JSON 时也会包含此图片。": {
+    "en": "Image saved to cloud and included in exported project JSON.",
+    "ja": "画像をクラウドに保存しました。JSON の書き出しにも含まれます。"
+  },
+  "上传后预览，确认后保存至云端。": {
+    "en": "Preview after uploading, then save to cloud.",
+    "ja": "アップロード後に確認してクラウドへ保存してください。"
+  },
+  "图片、配音与动画保存在云端，编辑记录会自动保存；也可下载 JSON 与 ZIP 备份。": {
+    "en": "Images, narration and videos are stored in the cloud. Edits save automatically. JSON and ZIP backups are available.",
+    "ja": "画像・音声・動画はクラウドに保存され、編集内容は自動保存されます。JSON・ZIP のバックアップも可能です。"
+  },
+  "台词与生成音频会自动保存到云端。": {
+    "en": "Dialogue and generated audio save automatically to cloud.",
+    "ja": "セリフと生成音声はクラウドに自動保存されます。"
+  },
+  "重试": {
+    "en": "Retry",
+    "ja": "再試行"
+  },
+  "返回": {
+    "en": "Back",
+    "ja": "戻る"
   }
 }

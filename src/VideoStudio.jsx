@@ -13,13 +13,13 @@ import {downloadZip} from './download-zip.js';
 const labels={submitting:'正在上传素材并提交',moderating:'正在审核提示词与素材',translating:'正在准备模型提示词',queued:'已排队，等待生成',in_progress:'正在生成动画',completed:'生成完成',failed:'生成失败',canceled:'任务已结束',submission_unknown:'提交状态待确认，请先检查 ai& 控制台'};
 const terminal=job=>['failed','canceled','submission_unknown'].includes(job?.status)||(job?.status==='completed'&&job.url);
 function wait(ms,signal){return new Promise((resolve,reject)=>{const abort=()=>{clearTimeout(timer);reject(new DOMException('Aborted','AbortError'));};const timer=setTimeout(()=>{signal.removeEventListener('abort',abort);resolve();},ms);signal.addEventListener('abort',abort,{once:true});if(signal.aborted)abort();});}
-export default function VideoStudio({playbackTarget,data,voiceData,characterImages,imagesReady,visible,onChange}){
+export default function VideoStudio({playbackTarget,data,voiceData,characterImages,imagesReady,visible,onChange,cloud=false}){
  const {t}=useI18n();
  const [playlist,setPlaylist]=useState(null);
  useEffect(()=>{if(!visible)setPlaylist(null);},[visible]);
  const shots=useMemo(()=>data.project.storyboard.flatMap(s=>s.mvinfo),[data]);
  const defaults=useMemo(()=>shots.map(s=>({prompt:s.video_prompt||'',firstPrompt:s.image_prompt||'',seconds:s.generation_plan?.duration_seconds||s.audio_plan?.duration_seconds||5,image:'',useAudio:false,revision:'initial'})),[shots]);
- const key=useMemo(()=>JSON.stringify(['video-studio',data.exported_at,data.project.direction_name,defaults.map(d=>[d.prompt,d.firstPrompt]),data._localId]),[data,defaults]);
+ const key=useMemo(()=>JSON.stringify(['video-studio',data.exported_at,data.project.direction_name,defaults.map(d=>[d.prompt,d.firstPrompt]),data._cloudId||data._localId]),[data,defaults]);
  const [state,setState]=useState(()=>restoreVideo(data));
  const [repairing,setRepairing]=useState(null);
  const [confirmAll,setConfirmAll]=useState(false),[generation,setGeneration]=useState(null);
@@ -30,7 +30,7 @@ export default function VideoStudio({playbackTarget,data,voiceData,characterImag
  const mounted=useRef(true),players=useRef([]),stateRef=useRef(state);stateRef.current=state;
  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
  useEffect(()=>{if(!visible)players.current.forEach(v=>v?.pause());},[visible]);
- useEffect(()=>{let active=true;imageStore(key).then(saved=>{if(active&&saved?.drafts?.length===defaults.length){const legacy=saved.queue?.some(q=>!Array.isArray(q.body?.characters)||!q.body.audio);if(legacy){const jobs={...saved.jobs};for(const q of saved.queue){if(jobs[q.index]?.id!==q.body.requestId)jobs[q.index]={id:q.body.requestId,status:'submitting',revision:q.revision,aspect:q.body.aspect,previous:jobs[q.index]?.url?jobs[q.index]:jobs[q.index]?.previous};}setState({...saved,jobs,queue:[],paused:false});}else setState(saved);}}).catch(e=>{if(active)setMessage(e.message);}).finally(()=>{if(active)setReady(true);});return()=>{active=false;};},[key,defaults]);
+ useEffect(()=>{let active=true;imageStore(key).then(saved=>{if(active&&!cloud&&saved?.drafts?.length===defaults.length){const legacy=saved.queue?.some(q=>!Array.isArray(q.body?.characters)||!q.body.audio);if(legacy){const jobs={...saved.jobs};for(const q of saved.queue){if(jobs[q.index]?.id!==q.body.requestId)jobs[q.index]={id:q.body.requestId,status:'submitting',revision:q.revision,aspect:q.body.aspect,previous:jobs[q.index]?.url?jobs[q.index]:jobs[q.index]?.previous};}setState({...saved,jobs,queue:[],paused:false});}else setState(saved);}}).catch(e=>{if(active)setMessage(e.message);}).finally(()=>{if(active)setReady(true);});return()=>{active=false;};},[key,defaults]);
  async function loadConfig(){try{const r=await fetch('/api/videos/config'),c=await r.json();if(!r.ok)throw new Error(c.error);if(mounted.current)setConfig(c);}catch(e){if(mounted.current)setMessage(e.message);}}
  useEffect(()=>{loadConfig();},[]);
  useEffect(()=>{if(!ready)return;onChange(state);imageStore(key,state).catch(e=>{if(mounted.current)setMessage('本地保存失败：'+e.message);});},[ready,state,key,onChange]);
@@ -91,14 +91,14 @@ export default function VideoStudio({playbackTarget,data,voiceData,characterImag
  const busy=state.queue.length>0;
  function edit(index,values){setState(s=>({...s,drafts:s.drafts.map((d,i)=>i===index?{...d,...values,revision:crypto.randomUUID()}:d)}));}
  const sources=useMemo(()=>characterSources(data,characterImages),[data,characterImages]);
- const plans=useMemo(()=>state.drafts.map((d,i)=>referencePlan(d.prompt,data.project.characters,sources,currentVoice(voiceData,i,d.seconds),continuityImage(d,state.jobs,i)||(d.usePreviousFrame?PENDING_FRAME:''))),[state.drafts,state.jobs,data,sources,voiceData]);
+ const plans=useMemo(()=>state.drafts.map((d,i)=>referencePlan(d.prompt,data.project.characters,sources,currentVoice(voiceData,i,d.seconds),continuityImage(d,state.jobs,i)||(d.usePreviousFrame?PENDING_FRAME:''),shots[i].character_refs)),[state.drafts,state.jobs,data,sources,voiceData]);
  function voiceFor(i){return currentVoice(voiceData,i,state.drafts[i]?.seconds);}
  function baseValid(i){const d=state.drafts[i];return imagesReady&&d.prompt.trim()&&d.prompt.length<=6000&&d.firstPrompt.length<=800&&Number.isInteger(d.seconds)&&d.seconds>=4&&d.seconds<=15&&!plans[i].problems.length;}
  function valid(i){return baseValid(i)&&(!state.drafts[i].usePreviousFrame||!!previousVideo(state.jobs,i));}
  function stale(i){const job=state.jobs[i],d=state.drafts[i];return job&&(job.previous||job.revision!==d.revision||job.aspect!==state.aspect||job.referenceKey!==plans[i].key);}
  function enqueue(indices){
   if(busy||repairing!==null||!config?.accepted)return;
-  const queue=indices.map(i=>{const d=state.drafts[i],clip=voiceFor(i),plan=plans[i];return {index:i,usePreviousFrame:d.usePreviousFrame===true,revision:d.revision,audioKey:clip.url||null,body:{requestId:crypto.randomUUID(),prompt:d.prompt,firstPrompt:d.firstPrompt,seconds:d.seconds,aspect:state.aspect,characters:plan.matched.map(c=>({name:c.name,image:sources[c.index].image})),image:d.usePreviousFrame?undefined:d.image||undefined,audio:clip.dataUrl,referenceKey:plan.key}};});
+  const queue=indices.map(i=>{const d=state.drafts[i],clip=voiceFor(i),plan=plans[i];return {index:i,usePreviousFrame:d.usePreviousFrame===true,revision:d.revision,audioKey:clip.url||null,body:{requestId:crypto.randomUUID(),projectId:data._cloudId,shotId:shots[i].shot_id,revision:d.revision,prompt:d.prompt,firstPrompt:d.firstPrompt,seconds:d.seconds,aspect:state.aspect,characters:plan.matched.map(c=>({character_id:data.project.characters[c.index].character_id,name:c.name,image:sources[c.index].image})),image:d.usePreviousFrame?undefined:d.image||undefined,audio:clip.dataUrl,referenceKey:plan.key,characterRefs:shots[i].character_refs}};});
   if(!queue.length)return;
   setConfirmAll(false);setGeneration({rows:indices.map(i=>({index:i,label:shots[i].shot_id||`镜头 ${i+1}`,status:'waiting'}))});
   setState(s=>({...s,queue,paused:false}));setMessage(`已加入 ${queue.length} 个镜头，依次生成。`);

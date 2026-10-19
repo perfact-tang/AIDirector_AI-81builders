@@ -1,0 +1,49 @@
+{
+  "schema": "mv-maker-project",
+  "schema_version": 4,
+  "project": {
+    "proposal_id": 1,
+    "direction_name": "项目名称",
+    "director_plan": {
+      "style_name": "表单画风",
+      "aspect_ratio": "16:9",
+      "visual_style_lock": {
+        "shared_style_prefix": "统一画风、比例与光照",
+        "shared_negative_prompt": "无拼贴、无文字水印"
+      }
+    },
+    "characters": [
+      {
+        "character_id": "CHAR-001",
+        "name": "角色姓名",
+        "role": "主角",
+        "description": "统一画风、比例与光照；单人物全身3/4参考图，浅灰背景，清晰面部与服装；无拼贴、无文字水印"
+      }
+    ],
+    "storyboard": [
+      {
+        "segment_id": 1,
+        "content_narrative": "剧情",
+        "mvinfo": [
+          {
+            "shot_id": "SHOT-001",
+            "character_refs": [
+              "CHAR-001"
+            ],
+            "image_prompt": "角色在场景中的首帧构图",
+            "video_prompt": "<Subject 1>完成一个明确动作，表演节奏跟随<Audio 1>。",
+            "audio_plan": {
+              "audio_text": "本镜头准确对白或旁白",
+              "duration_seconds": 5
+            },
+            "generation_plan": {
+              "duration_seconds": 5,
+              "audio_mode": "drive-audio",
+              "use_previous_frame": false
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,3 +1,4 @@
+import {browserOwner} from './browser-owner.js';
 const DB_NAME = 'ai-director-assets';
 function database() {
  return new Promise((resolve,reject)=>{
@@ -12,13 +13,15 @@ export async function imageStore(key,value) {
  try { return await new Promise((resolve,reject)=>{
   const transaction=db.transaction('images',value===undefined?'readonly':'readwrite');
   const store=transaction.objectStore('images');
+  key=browserOwner()==='local'?key:JSON.stringify([browserOwner(),key]);
   const request=value===undefined?store.get(key):store.put(value,key);
   transaction.oncomplete=()=>resolve(request.result);
   transaction.onerror=()=>reject(new Error('本地保存失败，请检查浏览器存储空间。'));
   transaction.onabort=()=>reject(new Error('本地保存失败，请检查浏览器存储空间。'));
  }); } finally {db.close();}
 }
-export const imageKey=(data,index)=>JSON.stringify([data.exported_at,data.project.direction_name,data.project.proposal_id,index,data.project.characters[index].description,data._localId]);
+export const legacyImageKey=(data,index)=>JSON.stringify([data.exported_at,data.project.direction_name,data.project.proposal_id,index,data.project.characters[index].description,data._localId]);
+export const imageKey=(data,index)=>data.project.characters[index].character_id?JSON.stringify(['character-image-v2',data._cloudId||data._localId||data.exported_at,data.project.proposal_id,data.project.direction_name,data.project.characters[index].character_id]):legacyImageKey(data,index);
 export function readImage(file) {
  return new Promise((resolve,reject)=>{
   if(!['image/png','image/jpeg','image/webp'].includes(file.type)) return reject(new Error('请选择 PNG、JPG 或 WebP 图片。'));

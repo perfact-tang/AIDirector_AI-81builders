@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+node_modules
+.venv
+.local
+dist
+artifacts
+*.png
+*.log
+.DS_Store
+.firebase

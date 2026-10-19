@@ -32,6 +32,8 @@ export function validateVideo(b){
  if(!b.audio)throw new Error('生成动画必须使用当前镜头已生成的配音。');
  decodeMedia(b.audio,'audio');
  if(!Array.isArray(b.characters)||!b.characters.every(c=>c&&typeof c.name==='string'&&c.name.trim()&&c.name.length<=80&&typeof c.image==='string'))throw new Error('人物参考数据无效。');
+ if(b.characterRefs!==undefined&&(!Array.isArray(b.characterRefs)||new Set(b.characterRefs).size!==b.characterRefs.length||b.characterRefs.length!==b.characters.length||b.characters.some((c,i)=>c.character_id!==b.characterRefs[i])))throw new Error('人物 ID 与参考图片顺序不一致。');
+ if(b.characterRefs)for(const tag of b.prompt.matchAll(/<(Picture|Subject)\s+(\d+)>/gi)){const max=b.characters.length+(tag[1].toLowerCase()==='picture'&&b.image?1:0);if(+tag[2]<1||+tag[2]>max)throw new Error('参考标注超出当前镜头的人物绑定。');}
  for(const c of b.characters)decodeMedia(c.image,'image');
  if(b.image)decodeMedia(b.image,'image');
  if(b.characters.length+(b.image?1:0)<1)throw new Error('音频参考至少需要一张人物或场景图片。');
@@ -51,31 +53,33 @@ export async function inspectAudio(value){
   return await decodedAudioDuration(file);
  }finally{await rm(folder,{recursive:true,force:true});}
 }
-export function createVideoService(request=aiRequest,folder=directory,{audioInspector=inspectAudio,muxer=lockNarration,preflight=()=>mediaTool(process.env.FFMPEG_BIN||'ffmpeg',['-version'])}={}){
+export function createVideoService(request=aiRequest,folder=directory,{audioInspector=inspectAudio,muxer=lockNarration,store,preflight=()=>mediaTool(process.env.FFMPEG_BIN||'ffmpeg',['-version'])}={}){
  const locks=new Map();
- async function save(job){await mkdir(folder,{recursive:true});const dest=path.join(folder,job.id+'.json'),tmp=dest+'.tmp';await writeFile(tmp,JSON.stringify(job));await rename(tmp,dest);}
- async function load(id){try{return JSON.parse(await readFile(path.join(folder,id+'.json'),'utf8'));}catch{return null;}}
+ async function save(job){if(store)return store.write('videos/'+job.id+'.json',job);await mkdir(folder,{recursive:true});const dest=path.join(folder,job.id+'.json'),tmp=dest+'.tmp';await writeFile(tmp,JSON.stringify(job));await rename(tmp,dest);}
+ async function load(id){if(store)return store.read('videos/'+id+'.json');try{return JSON.parse(await readFile(path.join(folder,id+'.json'),'utf8'));}catch{return null;}}
  async function upload(value,type){const {bytes,mime}=decodeMedia(value,type),form=new FormData();form.append('purpose',type==='image'?'vision':'audio');form.append('file',new Blob([bytes],{type:mime}),type==='image'?'reference.'+(mime.endsWith('jpeg')?'jpg':mime.split('/')[1]):'voice.mp3');const result=await(await request('files',{method:'POST',body:form})).json();if(!result.id)throw new Error('ai& 未返回素材 ID。');return result.id;}
  async function submit(body){
   validateVideo(body);const id=body.requestId;
   if(locks.has(id))return locks.get(id);
   const work=(async()=>{
    const existing=await load(id);if(existing)return existing;
-   const job={id,status:'submitting',createdAt:Date.now(),seconds:body.seconds,aspect:body.aspect,prompt:body.prompt,firstPrompt:body.firstPrompt};await save(job);
+   const job={id,status:'submitting',createdAt:Date.now(),seconds:body.seconds,aspect:body.aspect,prompt:body.prompt,firstPrompt:body.firstPrompt,...(typeof body.projectId==='string'?{projectId:body.projectId}:{}),...(typeof body.shotId==='string'?{shotId:body.shotId}:{}),revision:typeof body.revision==='string'?body.revision:'initial'};
+   if(store){try{await store.write('videos/'+id+'.json',job,{create:true});}catch(e){if(e.code===412)return load(id);throw e;}}else await save(job);
+   await mkdir(folder,{recursive:true});
    let posting=false;
    try{
     const duration=await audioInspector(body.audio);
     if(duration>body.seconds+0.02)throw new Error(`配音长 ${duration.toFixed(2)} 秒，超过镜头 ${body.seconds} 秒。请延长镜头或拆分台词，避免被截断。`);
     await preflight();
     await writeFile(path.join(folder,id+'.narration.mp3'),decodeMedia(body.audio,'audio').bytes);
-    job.narrationFile=id+'.narration.mp3';job.pipelineVersion='voice-image-v2';
+    job.narrationFile=id+'.narration.mp3';if(store)await store.upload('videos/'+job.narrationFile,path.join(folder,job.narrationFile),'audio/mpeg');job.pipelineVersion='voice-image-v2';
     if(body.continuity)job.continuity={...body.continuity};
     job.audioDuration=duration;job.referenceKey=body.referenceKey;job.referenceNames=body.characters.map(c=>c.name);
     const payload={model:MODEL,prompt:videoPrompt(body),seconds:body.seconds,aspect_ratio:body.aspect};
     const images=[];const manifest=[];
     const hash=value=>createHash('sha256').update(decodeMedia(value,'image').bytes).digest('hex');
-    for(const character of body.characters){const file_id=await upload(character.image,'image');images.push({file_id});manifest.push({name:character.name,file_id,sha256:hash(character.image)});}
-    if(body.image){const file_id=await upload(body.image,'image');images.push({file_id});manifest.push({name:body.continuity?'上一镜头尾帧':'场景参考',file_id,sha256:hash(body.image)});}
+    for(const [index,character] of body.characters.entries()){if(store)await store.bytes(`videos/${id}.reference-${index}.image`,decodeMedia(character.image,'image').bytes,decodeMedia(character.image,'image').mime);const file_id=await upload(character.image,'image');images.push({file_id});manifest.push({character_id:character.character_id,name:character.name,file_id,sha256:hash(character.image)});}
+    if(body.image){if(store)await store.bytes(`videos/${id}.scene.image`,decodeMedia(body.image,'image').bytes,decodeMedia(body.image,'image').mime);const file_id=await upload(body.image,'image');images.push({file_id});manifest.push({name:body.continuity?'上一镜头尾帧':'场景参考',file_id,sha256:hash(body.image)});}
     payload.references={images,audio:[{file_id:await upload(body.audio,'audio')}]};
     job.submittedRequest=payload;job.inputManifest={images:manifest,...(job.continuity?{continuity:job.continuity}:{}),audio:{file_id:payload.references.audio[0].file_id,sha256:createHash('sha256').update(decodeMedia(body.audio,'audio').bytes).digest('hex')}};
     await save(job);
@@ -100,10 +104,15 @@ export function createVideoService(request=aiRequest,folder=directory,{audioInsp
     if(job.status==='completed'){
      const dest=path.join(folder,id+'.mp4'),raw=path.join(folder,id+'.provider.mp4'),tmp=raw+'.part';
      try{
+      await mkdir(folder,{recursive:true});
+      if(store){try{await store.download('videos/'+id+'.provider.mp4',raw);}catch(e){if(e.code!==404)throw e;}if(job.narrationFile)await store.download('videos/'+job.narrationFile,path.join(folder,job.narrationFile));}
       let available=false;try{available=(await stat(raw)).size>0;}catch{}
-      if(!available){const response=await request('videos/'+encodeURIComponent(job.upstreamId)+'/content');await pipeline(Readable.fromWeb(response.body),createWriteStream(tmp));if(!(await stat(tmp)).size)throw new Error('视频文件为空。');await rename(tmp,raw);}
+      if(!available){const response=await request('videos/'+encodeURIComponent(job.upstreamId)+'/content');await pipeline(Readable.fromWeb(response.body),createWriteStream(tmp));if(!(await stat(tmp)).size)throw new Error('视频文件为空。');await rename(tmp,raw);if(store)await store.upload('videos/'+id+'.provider.mp4',raw,'video/mp4');}
       if(job.narrationFile)Object.assign(job,await muxer(raw,path.join(folder,job.narrationFile),dest));else await copyFile(raw,dest);
+      if(store)await store.upload('videos/'+id+'.mp4',dest,'video/mp4');
       job.url=`/api/videos/${id}/content`;job.downloadError=null;
+      if(store)await Promise.all([raw,dest,path.join(folder,job.narrationFile||'unused')].map(file=>rm(file,{force:true})));
+
      }catch(e){await rm(tmp,{force:true});job.downloadError='视频已生成，原配音混流未完成：'+e.message+'。将自动重试，不重新生成视频。';}
 
     }
@@ -118,25 +127,27 @@ export function createVideoService(request=aiRequest,folder=directory,{audioInsp
   const work=(async()=>{
    const job=await load(id);if(!job?.url)throw new Error('此任务尚无本地视频。');
    const raw=path.join(folder,id+'.provider.mp4'),temporary=path.join(folder,id+'.repair-narration.mp3');
+   if(store){await mkdir(folder,{recursive:true});await store.download('videos/'+id+'.provider.mp4',raw);}
    try{await stat(raw);}catch{await copyFile(path.join(folder,id+'.mp4'),raw);}
    try{
     await writeFile(temporary,decodeMedia(audio,'audio').bytes);
     const result=await muxer(raw,temporary,path.join(folder,id+'.mp4'));
     await rename(temporary,path.join(folder,id+'.narration.mp3'));
+    if(store){await store.upload('videos/'+id+'.mp4',path.join(folder,id+'.mp4'),'video/mp4');await store.upload('videos/'+id+'.narration.mp3',path.join(folder,id+'.narration.mp3'),'audio/mpeg');}
     Object.assign(job,result,{narrationFile:id+'.narration.mp3',audioRepairAt:Date.now()});await save(job);return job;
    }finally{await rm(temporary,{force:true});}
   })();locks.set(id,work);try{return await work;}finally{locks.delete(id);}
  }
 
- return {submit,get,restoreNarration,folder,async config(){const [a,m]=await Promise.all([request('videos/acceptance'),request('videos/models')]);const acceptance=await a.json(),models=await m.json();return {accepted:acceptance.accepted,model:MODEL,pricing:models.data?.find(m=>m.id===MODEL)?.pricing??[]};}};
+ return {submit,get,restoreNarration,folder,async content(id){if(!store)return path.join(folder,id+'.mp4');const directory=await mkdtemp(path.join(tmpdir(),'director-playback-'));try{return await store.download('videos/'+id+'.mp4',path.join(directory,'video.mp4'));}catch(e){await rm(directory,{recursive:true,force:true});throw e;}},cloud:!!store,async config(){const [a,m]=await Promise.all([request('videos/acceptance'),request('videos/models')]);const acceptance=await a.json(),models=await m.json();return {accepted:acceptance.accepted,model:MODEL,pricing:models.data?.find(m=>m.id===MODEL)?.pricing??[]};}};
 }
-export function videoRouter(service=createVideoService()){
+export function videoRouter(service=createVideoService(),{onSubmit}={}){
  const router=express.Router();
  router.get('/config',async(_req,res)=>{try{res.json(await service.config());}catch(e){res.status(502).json({error:e.message});}});
- router.post('/',async(req,res)=>{try{validateVideo(req.body);res.status(202).json(await service.submit(req.body));}catch(e){res.status(400).json({error:e.message});}});
+ router.post('/',async(req,res)=>{try{validateVideo(req.body);const job=await service.submit(req.body);if(onSubmit)await onSubmit(job);res.status(202).json(job);}catch(e){res.status(400).json({error:e.message});}});
  router.post('/:id/restore-narration',async(req,res)=>{if(!/^[-a-zA-Z0-9_]{16,80}$/.test(req.params.id))return res.sendStatus(404);try{res.json(await service.restoreNarration(req.params.id,req.body?.audio));}catch(e){res.status(400).json({error:e.message});}});
  const valid=id=>/^[-a-zA-Z0-9_]{16,80}$/.test(id);
  router.get('/:id',async(req,res)=>{if(!valid(req.params.id))return res.status(404).json({error:'任务不存在。'});try{const job=await service.get(req.params.id);job?res.json(job):res.status(404).json({error:'任务不存在。'});}catch{res.status(500).json({error:'无法读取本地视频任务。'});}});
- router.get('/:id/content',async(req,res)=>{if(!valid(req.params.id))return res.sendStatus(404);try{const job=await service.get(req.params.id);if(!job?.url)return res.status(404).json({error:'视频尚未缓存。'});res.type('video/mp4').sendFile(path.join(service.folder,req.params.id+'.mp4'),{dotfiles:'allow'},e=>{if(e&&!res.headersSent)res.status(404).json({error:'视频文件不存在。'});});}catch{res.sendStatus(500);}});
+ router.get('/:id/content',async(req,res)=>{if(!valid(req.params.id))return res.sendStatus(404);try{const job=await service.get(req.params.id);if(!job?.url)return res.status(404).json({error:'视频尚未缓存。'});const file=service.content?await service.content(req.params.id):path.join(service.folder,req.params.id+'.mp4');res.type('video/mp4').sendFile(file,{dotfiles:'allow'},e=>{if(service.cloud)rm(path.dirname(file),{recursive:true,force:true}).catch(()=>{});if(e&&!res.headersSent)res.status(404).json({error:'视频文件不存在。'});});}catch{res.sendStatus(500);}});
  return router;
 }

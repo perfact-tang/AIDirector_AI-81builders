@@ -17,7 +17,7 @@ The backend resolves the Skill in this order:
 2. The project-local installation in `.local/skills/direct-h3-storyboards/`.
 3. The bundled source in `skills/direct-h3-storyboards/`.
 
-It reads the Skill into the model's system context and executes the bundled JSON validator. `aiand run` does not need to discover or install the Skill separately.
+It reads the Skill into the model's system context and executes the application JSON validator (`validate_app_project.mjs`). `aiand run` does not need to discover or install the Skill separately.
 
 ## Contents
 
@@ -30,10 +30,12 @@ It reads the Skill into the model's system context and executes the bundled JSON
 
 The original Skill is written in Chinese and intentionally asks for Chinese production prompts while preserving the language of dialogue, names and lyrics. UI language selection does not rewrite those instructions or translate project content.
 
-The Skill describes broader voice and music workflows for the project schema. This application's current execution engines are Edge TTS and ai& MiniMax H3; it does not execute the Skill's other voice or music generators.
+The current application contract follows the form: three visual styles, fixed 5/10-second shots, manually uploaded character images, Edge TTS and ai& MiniMax H3. It does not require Qwen voice creation, music chapters or image generation services. Legacy full MV Maker references and validation scripts remain available for external use and are excluded from the application's model context.
+
+`character_id` identifies a person; each shot's ordered `character_refs` identifies its reference images. The shared `scripts/project_contract.mjs` computes shot duration, frame count and timeline and validates identities and references. The application template is `assets/app-project-template.json`; `assets/storyboard-template.json` remains the legacy template. Imported older projects without explicit references continue using name matching.
 
 Run the bundled validator tests with `npm run test:skills`. To validate an exported project manually:
 
 ```sh
-node skills/direct-h3-storyboards/scripts/validate_storyboard.mjs /path/to/project.json
+node skills/direct-h3-storyboards/scripts/validate_app_project.mjs /path/to/project.json
 ```
