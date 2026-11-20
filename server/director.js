@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {resolveSkillPath,loadSkillContext} from './skill-paths.js';
 import {normalizeProject,validateAppProject} from '../src/project-contract.js';
-export const MODEL = 'deepseek-ai/deepseek-v4.1-flash';
+export const MODEL = 'deepseek-ai/deepseek-v4.1-flash-1017';
 export function runProcess(command, args, input = '', timeout = 900000) {
  return new Promise((resolve, reject) => {
   const child = spawn(command, args, { env: process.env, shell: false, stdio: ['pipe','pipe','pipe'] });

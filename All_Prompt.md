@@ -22,7 +22,7 @@ Alright, here comes the fun part, which is also the main challenge of this progr
 You will combine the selected art style, pace settings, and your creative inspiration into a prompt text. Then, via the `aiand` command-line tool installed on my local computer, invoke the locally installed skill `direct-h3-storyboards` to execute it. Once completed, `direct-h3-storyboards` will return a JSON object, which you will then pass back to my web application. Finally, my website will visualize the returned data, referencing my existing site `001_CloudJsonView`.
 
 * **`aiand` Official Docs**: [https://docs.aiand.com/](https://docs.aiand.com/)
-* This time, we will use the `deepseek-ai/deepseek-v4.1-flash` model via `aiand`.
+* This time, we will use the `deepseek-ai/deepseek-v4.1-flash-1017` model via `aiand`.
 * **`aiand` API key**: `YOUR API KEY`
 
 ---

@@ -82,7 +82,7 @@ Optional overrides are documented in [`.env.example`](.env.example):
 | `FFMPEG_BIN` | Path to `ffmpeg` for narration checks, speed adjustment, and final video audio |
 | `FFPROBE_BIN` | Path to `ffprobe` for video duration checks |
 
-The default text model is `deepseek-ai/deepseek-v4.1-flash`; video generation uses `minimaxai/minimax-h3` through the [ai& Videos API](https://docs.aiand.com/api/videos/).
+The default text model is `deepseek-ai/deepseek-v4.1-flash-1017`; video generation uses `minimaxai/minimax-h3-fast` through the [ai& Videos API](https://docs.aiand.com/api/videos/).
 
 ### 3. Start the app
 

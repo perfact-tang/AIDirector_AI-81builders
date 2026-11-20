@@ -12,7 +12,7 @@ import {compileVideoPrompt} from '../src/compiled-video-prompt.js';
 import {lockNarration,mediaTool,decodedAudioDuration} from './media-tools.js';
 import {tmpdir} from 'node:os';
 const directory=fileURLToPath(new URL('../.local/videos/',import.meta.url));
-const MODEL='minimaxai/minimax-h3';
+const MODEL='minimaxai/minimax-h3-fast';
 const aspects=['Auto','21:9','16:9','4:3','1:1','3:4','9:16'];
 const errors={agreement_required:'请先在 ai& 控制台 Playground 接受视频服务条款。',insufficient_credits:'ai& 余额不足。',monthly_budget_reached:'ai& 月度预算不足。',concurrency_limit_exceeded:'ai& 同时生成数量已达上限，请等待现有任务完成。',rate_limit_exceeded:'ai& 提交过于频繁，请稍后重试。',moderation_blocked:'提示词或参考素材未通过内容审核，请修改后重试。',provider_unavailable:'视频服务暂不可用。',model_not_found:'当前账户无法使用 MiniMax H3。'};
 export async function aiRequest(route,options={}){
