@@ -232,4 +232,10 @@ Ignore rules do not remove files that are already tracked or erase earlier commi
 
 ## Cloud Run / Firebase
 
+Redeploy the configured service with one command (no temporary config files required):
+
+```sh
+./deploy.sh
+```
+
 Cloud deployment supports existing Firebase Auth users, user-scoped Firebase Storage, cloud project save/restore, and authenticated Cloud Tasks workers. It scales to zero when idle. See [Cloud Run deployment and operations](docs/cloud-run.md) for provisioning, environment variables, security boundaries and redeployment commands.

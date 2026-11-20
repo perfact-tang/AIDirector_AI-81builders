@@ -48,21 +48,19 @@ The public service serves the login page. Application APIs require verified Fire
 
 `Dockerfile` includes Node 24, Python, pinned Edge TTS, FFmpeg/ffprobe and the project-local Skill. Director generation uses ai& HTTPS directly and does not require a local aiand binary or personal Skills folder.
 
-Retrieve the existing public Firebase Web config:
+From the project directory, run:
 
 ```sh
-npx -y firebase-tools@latest apps:sdkconfig WEB 1:153532166169:web:acd73423cf17844176fa88 \
-  --project vibecodingjapan --json > /tmp/ai-director-firebase-config.json
+./deploy.sh
 ```
 
-Review the provisioning script before using it in a different environment: it changes scoped IAM and uploads the local AIAND key to Secret Manager. Existing enabled secret versions are retained; keys are never printed.
+This is the only command needed to redeploy the existing `vibecodingjapan / asia-northeast1 / ai-director` service. The script finds the project root automatically, reads the current image for the build cache, builds the current source in Cloud Build, updates the service and checks `/api/health`. It explicitly keeps both service-level and revision-level minimum instances at zero and enables request-based billing.
 
-```sh
-node scripts/provision-cloud.mjs
-DEPLOY_ENV_FILE=/tmp/ai-director-cloud-env.json scripts/deploy-cloud-run.sh
-```
+Only an installed, authenticated Google Cloud CLI is required locally (`gcloud auth login` on a new computer). No local Docker, Firebase CLI, environment-variable file or `/tmp` configuration is needed. Existing Firebase configuration, Storage bucket, Cloud Tasks queue, Secret references, service account and access policy are preserved. The old `scripts/deploy-cloud-run.sh` command delegates to this same entrypoint.
 
-The runtime config contains public Firebase configuration and resource names; `SERVICE_URL` must match the deployed URL and the Cloud Tasks audience. `.env.example` lists variables. `K_SERVICE` enforces cloud mode on Cloud Run. Local-only mode remains available when no cloud flags are set. `.env`, credentials, local runtimes, generated media and personal files are excluded from Docker and Cloud Build context.
+Optional `PROJECT_ID`, `REGION`, `SERVICE` and `REPOSITORY` environment variables select another already-configured service. The script stops before building if that service cannot be read; it never silently creates an unconfigured service. `scripts/provision-cloud.mjs` remains an administrator-only initial resource provisioning tool and is not part of normal redeployment.
+
+`.env`, credentials, local runtimes, generated media and personal files are excluded from the build context. `Dockerfile` packages the runtime dependencies and the project-local Skill. Local-only development remains available without cloud flags.
 
 ## Verification and limits
 
