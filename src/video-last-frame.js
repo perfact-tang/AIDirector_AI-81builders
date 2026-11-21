@@ -5,7 +5,18 @@ function videoEvent(video,name,signal){
   video.addEventListener(name,done,{once:true});video.addEventListener('error',error,{once:true});signal.addEventListener('abort',abort,{once:true});if(signal.aborted)abort();
  });
 }
-// Browser-only: decode a local MP4, seek inside its final frame, then capture it with Canvas.
+function waitDecodedFrame(video,signal){
+ if(typeof video.requestVideoFrameCallback!=='function')return Promise.resolve();
+ return new Promise((resolve,reject)=>{
+  let done=false;
+  const timer=setTimeout(()=>{if(!done){done=true;cleanup();resolve();}},300);
+  const abort=()=>{if(!done){done=true;cleanup();reject(signal.reason||new DOMException('Aborted','AbortError'));}};
+  const cleanup=()=>{clearTimeout(timer);signal.removeEventListener('abort',abort);};
+  signal.addEventListener('abort',abort,{once:true});
+  video.requestVideoFrameCallback(()=>{if(!done){done=true;cleanup();resolve();}});
+ });
+}
+// Browser-only: decode a local MP4, seek safely inside its final decoded frame, then capture it with Canvas.
 export async function extractLastFrame(url,{signal}={}){
  const controller=new AbortController(),abort=()=>controller.abort(signal.reason);signal?.addEventListener('abort',abort,{once:true});if(signal?.aborted)abort();
  const timer=setTimeout(()=>controller.abort(new Error('提取尾帧超时，请检查视频后重试。')),45000),active=controller.signal;
@@ -15,9 +26,11 @@ export async function extractLastFrame(url,{signal}={}){
   objectUrl=URL.createObjectURL(await response.blob());video.src=objectUrl;
   if(video.readyState<1)await videoEvent(video,'loadedmetadata',active);
   if(!Number.isFinite(video.duration)||video.duration<=0)throw new Error('上一镜头视频时长无效，无法提取尾帧。');
-  const end=Math.max(0,video.duration-Math.min(0.001,video.duration/1000));
+  const margin=Math.min(0.05,video.duration/20);
+  const end=Math.max(0,video.duration-margin);
   const sought=videoEvent(video,'seeked',active);video.currentTime=end;await sought;
   if(video.readyState<2)await videoEvent(video,'loadeddata',active);
+  await waitDecodedFrame(video,active);
   active.throwIfAborted();
   if(!video.videoWidth||!video.videoHeight)throw new Error('上一镜头没有可用的视频画面。');
   const scale=Math.min(1,1920/Math.max(video.videoWidth,video.videoHeight));

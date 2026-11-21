@@ -1726,5 +1726,425 @@
   "返回": {
     "en": "Back",
     "ja": "戻る"
+  },
+  "赛博霓虹": {
+    "en": "Cyberpunk Neon",
+    "ja": "サイバーパンク"
+  },
+  "雨夜霓虹，未来都市张力": {
+    "en": "Rainy neon streets, futuristic urban tension",
+    "ja": "雨夜のネオン、近未来都市の張力"
+  },
+  "国风水墨": {
+    "en": "Chinese Ink Wash",
+    "ja": "水墨画スタイル"
+  },
+  "写意留白，丹青气韵流转": {
+    "en": "Expressive brushwork, ink flow and poetic negative space",
+    "ja": "写意と余白、墨と丹青の気韻"
+  },
+  "黏土定格": {
+    "en": "Clay Stop-Motion",
+    "ja": "クレイ・ストップモーション"
+  },
+  "手作肌理，温暖微缩剧场": {
+    "en": "Handcrafted clay texture, warm miniature theater",
+    "ja": "手作りの質感、温かなミニチュア劇場"
+  },
+  "复古油画": {
+    "en": "Classical Oil",
+    "ja": "クラシック油絵"
+  },
+  "厚涂笔触，戏剧明暗构图": {
+    "en": "Impasto brushstrokes, dramatic chiaroscuro",
+    "ja": "厚塗りの筆致、劇的な明暗構図"
+  },
+  "治愈水彩": {
+    "en": "Healing Watercolor",
+    "ja": "癒やしの水彩"
+  },
+  "通透晕染，柔和手绘诗意": {
+    "en": "Translucent washes, gentle hand-painted poetry",
+    "ja": "透明感ある滲み、柔らかな手描き詩情"
+  },
+  "黑白胶片": {
+    "en": "Film Noir",
+    "ja": "モノクロフィルム"
+  },
+  "胶片颗粒，强烈光影悬疑": {
+    "en": "35mm silver grain, stark shadow suspense",
+    "ja": "フィルム粒子、強い光影のサスペンス"
+  },
+  "创作模式选择": {
+    "en": "Production mode",
+    "ja": "制作モード選択"
+  },
+  "讲解故事": {
+    "en": "Story & Explainer",
+    "ja": "ストーリー・解説"
+  },
+  "故事、知识解说、文章脚本 · Edge TTS 配音 + MiniMax H3 分镜动画": {
+    "en": "Stories, explainers & scripts · Edge TTS voice + MiniMax H3 storyboard video",
+    "ja": "物語・解説台本 · Edge TTS 音声 + MiniMax H3 絵コンテ動画"
+  },
+  "音乐 MV": {
+    "en": "Music Video",
+    "ja": "ミュージックビデオ"
+  },
+  "上传 MP3 + LRC 歌词 · 自动切片 + 逐条脚本 + 全自动 MiniMax H3 视频": {
+    "en": "Upload MP3 + LRC lyrics · Auto-slice + streaming script + auto MiniMax H3 video",
+    "ja": "MP3 + LRC 歌詞をアップロード · 自動分割 + 順次脚本 + 全自動 MiniMax H3 動画"
+  },
+  "上传歌曲与歌词": {
+    "en": "Upload Song & Lyrics",
+    "ja": "楽曲と歌詞をアップロード"
+  },
+  "支持 MP3 / WAV 与带时间戳的 LRC 歌词": {
+    "en": "Supports MP3 / WAV audio and timestamped LRC lyrics",
+    "ja": "MP3 / WAV 音声とタイムスタンプ付き LRC 歌詞に対応"
+  },
+  "上传 MP3 歌曲": {
+    "en": "Upload MP3 Track",
+    "ja": "MP3 楽曲をアップロード"
+  },
+  "系统将按设定节奏自动精确切片，并保留原曲驱动 MiniMax H3 画面律动。": {
+    "en": "Automatically slices audio by your pacing and drives MiniMax H3 motion with the original music.",
+    "ja": "設定リズムで自動分割し、原曲のリズムで MiniMax H3 動画を駆動します。"
+  },
+  "更换音频": {
+    "en": "Replace audio",
+    "ja": "音声を変更"
+  },
+  "选择 MP3 / WAV": {
+    "en": "Choose MP3 / WAV",
+    "ja": "MP3 / WAV を選択"
+  },
+  "预计切分": {
+    "en": "Estimated",
+    "ja": "分割予定"
+  },
+  "段": {
+    "en": "slices",
+    "ja": "区間"
+  },
+  "镜": {
+    "en": "shot",
+    "ja": "カット"
+  },
+  "尚未上传音频文件（最大 35 MB，最长 10 分钟）": {
+    "en": "No audio uploaded yet (up to 35 MB, 10 minutes max)",
+    "ja": "音声未アップロード（最大 35 MB・最長 10 分）"
+  },
+  "上传或粘贴 LRC 歌词": {
+    "en": "Upload or Paste LRC Lyrics",
+    "ja": "LRC 歌詞をアップロードまたは貼付"
+  },
+  "行时间戳歌词": {
+    "en": "timestamped lyric lines",
+    "ja": "行のタイムスタンプ歌詞"
+  },
+  "已识别": {
+    "en": "Parsed",
+    "ja": "認識済み"
+  },
+  "支持 [00:12.34] 格式，也可留空由纯音乐节奏生成。": {
+    "en": "Supports [00:12.34] format, or leave blank for instrumental pacing.",
+    "ja": "[00:12.34] 形式に対応。空欄でもインストゥルメンタルとして生成可能です。"
+  },
+  "导入 .lrc 文件": {
+    "en": "Import .lrc file",
+    "ja": ".lrc を読み込む"
+  },
+  "选择画风与歌曲风格": {
+    "en": "Visual Style & Music Genre",
+    "ja": "画風と楽曲ジャンルを選択"
+  },
+  "决定整支 MV 的视觉质感与剪辑节奏": {
+    "en": "Defines the visual aesthetic and editing rhythm of your MV",
+    "ja": "MV 全体のビジュアル質感と編集リズムを決定します"
+  },
+  "MV 画风选择": {
+    "en": "MV visual style",
+    "ja": "MV 画風選択"
+  },
+  "歌曲风格": {
+    "en": "Music Genre",
+    "ja": "楽曲ジャンル"
+  },
+  "流行 Pop": {
+    "en": "Pop",
+    "ja": "ポップ"
+  },
+  "摇滚 Rock": {
+    "en": "Rock",
+    "ja": "ロック"
+  },
+  "电子 / 赛博": {
+    "en": "Electronic / Cyber",
+    "ja": "エレクトロニック"
+  },
+  "古风 / 国风": {
+    "en": "Chinese Traditional",
+    "ja": "中国古風"
+  },
+  "民谣 / 治愈": {
+    "en": "Folk / Healing",
+    "ja": "フォーク・癒やし"
+  },
+  "说唱 / 嘻哈": {
+    "en": "Hip-Hop / Rap",
+    "ja": "ヒップホップ"
+  },
+  "R&B / 都市夜景": {
+    "en": "R&B / Urban Night",
+    "ja": "R&B・アーバン"
+  },
+  "二次元 / 燃系": {
+    "en": "Anime Rock",
+    "ja": "アニメロック"
+  },
+  "电影配乐 / 史诗": {
+    "en": "Cinematic / Epic",
+    "ja": "シネマティック"
+  },
+  "爵士 / 复古": {
+    "en": "Jazz / Retro",
+    "ja": "ジャズ・レトロ"
+  },
+  "自动切片节奏与画幅": {
+    "en": "Auto-Slice Pacing & Aspect Ratio",
+    "ja": "自動分割リズムとアスペクト比"
+  },
+  "切片节奏": {
+    "en": "Slice pacing",
+    "ja": "分割リズム"
+  },
+  "快节奏切片": {
+    "en": "Fast-Paced Slices",
+    "ja": "ハイテンポ分割"
+  },
+  "慢节奏切片": {
+    "en": "Slow-Paced Slices",
+    "ja": "スローテンポ分割"
+  },
+  "紧凑卡点切换，适合燃系/电子/流行": {
+    "en": "Tight beat cuts for upbeat, electronic, or pop tracks",
+    "ja": "ビートに合わせたテンポ良い切り替え"
+  },
+  "长镜头情绪流动，适合抒情/古风/电影感": {
+    "en": "Flowing longer takes for ballads or cinematic moods",
+    "ja": "余韻を活かす長回し演出"
+  },
+  "MV 画幅": {
+    "en": "MV Aspect Ratio",
+    "ja": "MV アスペクト比"
+  },
+  "MV 叙述感觉 / 灵感（可选）": {
+    "en": "MV Mood & Story Inspiration (Optional)",
+    "ja": "MV の世界観・ストーリー着想（任意）"
+  },
+  "告诉 AI 你想要的剧情氛围、意象或情绪转折": {
+    "en": "Share desired story mood, visual motifs, or emotional arcs",
+    "ja": "希望する雰囲気や映像モチーフ、感情の展開を入力"
+  },
+  "将与歌词时间轴深度融合生成逐条分镜": {
+    "en": "Blends with your timestamped lyrics to craft each shot",
+    "ja": "歌詞タイムラインと融合して各カットを設計します"
+  },
+  "参考人物 / 参考图（可选）": {
+    "en": "Reference Characters / Images (Optional)",
+    "ja": "参照キャラクター / 画像（任意）"
+  },
+  "可直接选用系统默认参考，或上传用其他 AI 生成的人物图": {
+    "en": "Pick built-in defaults or upload character images generated elsewhere",
+    "ja": "デフォルト参照を選ぶか、外部 AI で生成した人物画像をアップロード"
+  },
+  "赛博歌姬 · Nova": {
+    "en": "Cyber Vocalist · Nova",
+    "ja": "サイバー歌姫・Nova"
+  },
+  "都市夜行者 · 陆沉": {
+    "en": "Urban Walker · Lu Chen",
+    "ja": "都市の夜行者・陸沈"
+  },
+  "青衫剑客 · 清寒": {
+    "en": "Ink Swordsman · Qinghan",
+    "ja": "水墨の剣士・清寒"
+  },
+  "二次元主唱 · 星野": {
+    "en": "Anime Vocalist · Hoshino",
+    "ja": "アニメボーカル・星野"
+  },
+  "星际旅人 · Aria": {
+    "en": "Starlight Drifter · Aria",
+    "ja": "星間旅人・Aria"
+  },
+  "复古胶片主角 · 曼妮": {
+    "en": "Retro Vinyl · Manni",
+    "ja": "レトロフィルム・マンニ"
+  },
+  "赛博 / 电子 / 流行": {
+    "en": "Cyber / Electronic / Pop",
+    "ja": "サイバー / 電子 / ポップ"
+  },
+  "R&B / 说唱 / 摇滚": {
+    "en": "R&B / Hip-Hop / Rock",
+    "ja": "R&B / ラップ / ロック"
+  },
+  "古风 / 国风 / 史诗": {
+    "en": "Guofeng / Traditional / Epic",
+    "ja": "古風 / 伝統 / 壮大"
+  },
+  "二次元 / 摇滚 / 流行": {
+    "en": "Anime / Rock / Pop",
+    "ja": "アニメ / ロック / ポップ"
+  },
+  "电子 / 电影配乐": {
+    "en": "Electronic / Cinematic",
+    "ja": "電子 / 映画音楽"
+  },
+  "爵士 / 民谣 / 复古": {
+    "en": "Jazz / Folk / Retro",
+    "ja": "ジャズ / フォーク / レトロ"
+  },
+  "上传自定义参考人物 / 参考图": {
+    "en": "Upload Custom Reference Image",
+    "ja": "カスタム参照画像をアップロード"
+  },
+  "最多同时使用 4 张参考图；若未勾选，将自动匹配所选画风的默认参考图。": {
+    "en": "Up to 4 references at once; if none selected, a style-matched default is used automatically.",
+    "ja": "最大 4 枚まで使用可能。未選択時は画風に合うデフォルト画像を自動使用します。"
+  },
+  "参考人物名称": {
+    "en": "Reference character name",
+    "ja": "参照キャラクター名"
+  },
+  "脚本逐条输出完成后，全自动生成全部 MiniMax H3 视频": {
+    "en": "Automatically generate all MiniMax H3 videos once script streaming finishes",
+    "ja": "脚本出力完了後、すべての MiniMax H3 動画を自動生成する"
+  },
+  "正在切片音频…": {
+    "en": "Slicing audio…",
+    "ja": "音声を分割中…"
+  },
+  "正在逐条输出脚本…": {
+    "en": "Streaming MV script…",
+    "ja": "MV 脚本を順次生成中…"
+  },
+  "自动切片并生成 MV 脚本": {
+    "en": "Auto-Slice & Generate MV Script",
+    "ja": "自動分割して MV 脚本を生成"
+  },
+  "正在构思 MV 故事…": {
+    "en": "Conceiving MV story…",
+    "ja": "MV ストーリーを構想中…"
+  },
+  "停止 H3 生成": {
+    "en": "Stop H3 Generation",
+    "ja": "H3 生成を停止"
+  },
+  "继续生成剩余 H3 视频": {
+    "en": "Generate Remaining H3 Videos",
+    "ja": "残りの H3 動画を生成"
+  },
+  "全自动生成全部 MiniMax H3 视频": {
+    "en": "Auto-Generate All MiniMax H3 Videos",
+    "ja": "全 MiniMax H3 動画を自動生成"
+  },
+  "连续预览片段": {
+    "en": "Play All Clips",
+    "ja": "生成済みクリップを連続再生"
+  },
+  "正在合成完整 MV…": {
+    "en": "Merging full MV…",
+    "ja": "完全版 MV を合成中…"
+  },
+  "一键合成完整 MV": {
+    "en": "Merge Full MV",
+    "ja": "完全版 MV を合成"
+  },
+  "下载 ZIP": {
+    "en": "Download ZIP",
+    "ja": "ZIP をダウンロード"
+  },
+  "MiniMax H3 报价": {
+    "en": "MiniMax H3 rate",
+    "ja": "MiniMax H3 単価"
+  },
+  "共": {
+    "en": "Total",
+    "ja": "合計"
+  },
+  "个切片": {
+    "en": "slices",
+    "ja": "区間"
+  },
+  "预计": {
+    "en": "Est.",
+    "ja": "推定"
+  },
+  "MiniMax H3 · 768p · 原曲切片音频驱动": {
+    "en": "MiniMax H3 · 768p · Original song slice audio-driven",
+    "ja": "MiniMax H3 · 768p · 原曲スライス音声駆動"
+  },
+  "队列剩余": {
+    "en": "Queue remaining",
+    "ja": "待機残り"
+  },
+  "AI 导演故事大纲": {
+    "en": "AI Director Story Outline",
+    "ja": "AI 監督ストーリー概要"
+  },
+  "视觉母题": {
+    "en": "Visual Theme",
+    "ja": "ビジュアルテーマ"
+  },
+  "光影色彩": {
+    "en": "Color & Lighting",
+    "ja": "色彩・ライティング"
+  },
+  "完整合成 MV（已锁定原曲音轨）": {
+    "en": "Merged Full MV (Master Track Locked)",
+    "ja": "合成済み完全版 MV（原曲トラック固定）"
+  },
+  "下载完整 MV (MP4)": {
+    "en": "Download Full MV (MP4)",
+    "ja": "完全版 MV をダウンロード (MP4)"
+  },
+  "重新生成 H3": {
+    "en": "Regenerate H3",
+    "ja": "H3 を再生成"
+  },
+  "生成本段 H3": {
+    "en": "Generate H3",
+    "ja": "この区間を生成"
+  },
+  "转场设计": {
+    "en": "Transition",
+    "ja": "トランジション"
+  },
+  "分镜动态提示词": {
+    "en": "Motion Video Prompt",
+    "ja": "動画プロンプト"
+  },
+  "核心构图提示词": {
+    "en": "Key Composition Prompt",
+    "ja": "構図プロンプト"
+  },
+  "使用上一镜头尾帧作为起始衔接参考": {
+    "en": "Use previous shot tail frame as opening reference",
+    "ja": "前カットの最終フレームを開始参照に使用"
+  },
+  "排队等待生成": {
+    "en": "Queued for generation",
+    "ja": "生成待機中"
+  },
+  "等待生成 MiniMax H3 视频": {
+    "en": "Ready to generate MiniMax H3 video",
+    "ja": "MiniMax H3 動画の生成待ち"
+  },
+  "正在等待 AI 逐条输出此切片的分镜脚本…": {
+    "en": "Waiting for AI to stream this slice storyboard…",
+    "ja": "AI がこの区間の絵コンテを出力するのを待っています…"
   }
 }

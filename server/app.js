@@ -10,6 +10,8 @@ import {authRouter,requireUser,sameOrigin} from './auth.js';
 import {cloudEnabled,firebaseServices,publicFirebaseConfig} from './firebase.js';
 import {createCloudStore,ownerKey} from './cloud-store.js';
 import {projectsRouter,saveProject} from './projects.js';
+import {mvRouter} from './mv.js';
+import {VISUAL_STYLE_IDS} from '../src/visual-styles.js';
 export function createApp(generate=generateProject,{videos,tts,cloud=cloudEnabled(),firebase=cloud?firebaseServices():null,webConfig=cloud?publicFirebaseConfig():{},taskQueue,taskVerifier}={}){
  const app=express(),jobs=new Map(),services=new Map(),instanceId=randomUUID(),activeScripts=new Map();
  const queue=cloud?(taskQueue||createTaskQueue()):null;
@@ -27,6 +29,7 @@ export function createApp(generate=generateProject,{videos,tts,cloud=cloudEnable
  const getStore=req=>createCloudStore(firebase.bucket,req.user.uid);
  app.use('/api/videos',express.json({limit:cloud?'24mb':'150mb'}));
  app.use('/api/projects',express.json({limit:'24mb'}));
+ app.use('/api/mv',mvRouter({...(videos?.folder?{videoFolder:videos.folder}:{})}));
  app.use(express.json({limit:'100kb'}));
  if(cloud){
   app.use('/api/projects',projectsRouter(getStore));
@@ -37,7 +40,7 @@ export function createApp(generate=generateProject,{videos,tts,cloud=cloudEnable
  }else{app.use('/api',ttsRouter(tts));app.use('/api/videos',videoRouter(videos));}
  app.post('/api/scripts',async(req,res)=>{
   const {style,pace,content}=req.body??{};
-  if(!['realistic-3d','anime','2.5d'].includes(style)||![5,10].includes(pace)||typeof content!=='string'||!content.trim()||content.length>12000)return res.status(400).json({error:'请选择画风、节奏，并输入 1–12,000 字的内容。'});
+  if(!VISUAL_STYLE_IDS.includes(style)||![5,10].includes(pace)||typeof content!=='string'||!content.trim()||content.length>12000)return res.status(400).json({error:'请选择画风、节奏，并输入 1–12,000 字的内容。'});
   const owner=cloud?req.user.uid:'local',store=cloud?getStore(req):null;
   if([...jobs.values()].some(j=>j.owner===owner&&j.status==='running'))return res.status(409).json({error:'已有任务正在生成，请等待完成。'});
   const brief={style,pace,content:content.trim()},job={id:randomUUID(),owner,instanceId,status:'running',stage:'正在读取本地 skill',createdAt:Date.now(),brief,prompt:briefText(brief),model:MODEL,events:[{stage:'正在读取本地 skill',at:Date.now()}]};
