@@ -29,7 +29,7 @@ export function createApp(generate=generateProject,{videos,tts,cloud=cloudEnable
  const getStore=req=>createCloudStore(firebase.bucket,req.user.uid);
  app.use('/api/videos',express.json({limit:cloud?'24mb':'150mb'}));
  app.use('/api/projects',express.json({limit:'24mb'}));
- app.use('/api/mv',mvRouter({...(videos?.folder?{videoFolder:videos.folder}:{})}));
+ app.use('/api/mv',mvRouter({getStore:cloud?getStore:null,getVideoFolder:cloud?req=>userServices(req.user.uid).videoService.folder:()=>videos?.folder}));
  app.use(express.json({limit:'100kb'}));
  if(cloud){
   app.use('/api/projects',projectsRouter(getStore));

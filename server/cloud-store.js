@@ -13,6 +13,7 @@ export function createCloudStore(bucket,uid){
   async download(key,local){await mkdir(path.dirname(local),{recursive:true});await file(key).download({destination:local});return local;},
   async buffer(key){return (await file(key).download())[0];},
   async list(directory){const [files]=await bucket.getFiles({prefix:prefix+directory,maxResults:1000,autoPaginate:false});return files.map(f=>f.name.slice(prefix.length));},
+  async remove(key){try{await file(key).delete();}catch(e){if(e.code!==404)throw e;}},
   objectPath:key=>prefix+key,
  };
 }

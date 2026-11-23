@@ -1,5 +1,5 @@
 import express from 'express';
-import { mkdir, writeFile, stat, rm, access } from 'node:fs/promises';
+import { mkdir, writeFile, readFile, readdir, stat, rm, access, copyFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -11,6 +11,66 @@ import { getVisualStyle, VISUAL_STYLE_IDS } from '../src/visual-styles.js';
 const DEFAULT_MV_DIR = fileURLToPath(new URL('../.local/mv/', import.meta.url));
 const DEFAULT_VIDEO_DIR = fileURLToPath(new URL('../.local/videos/', import.meta.url));
 
+function createLocalStore(rootDir) {
+  const resolveSafe = (key) => {
+    if (!/^[\w./-]+$/.test(key) || key.includes('..') || key.startsWith('/')) {
+      throw new Error('Invalid object path');
+    }
+    return path.join(rootDir, key);
+  };
+  return {
+    async read(key) {
+      try {
+        return JSON.parse(await readFile(resolveSafe(key), 'utf8'));
+      } catch (e) {
+        if (e.code === 'ENOENT') return null;
+        throw e;
+      }
+    },
+    async write(key, value) {
+      const dest = resolveSafe(key);
+      await mkdir(path.dirname(dest), { recursive: true });
+      await writeFile(dest, JSON.stringify(value), 'utf8');
+    },
+    async bytes(key, bytes) {
+      const dest = resolveSafe(key);
+      await mkdir(path.dirname(dest), { recursive: true });
+      await writeFile(dest, bytes);
+    },
+    async upload(key, localPath) {
+      const dest = resolveSafe(key);
+      await mkdir(path.dirname(dest), { recursive: true });
+      if (path.resolve(localPath) !== path.resolve(dest)) {
+        await copyFile(localPath, dest);
+      }
+    },
+    async download(key, localPath) {
+      const src = resolveSafe(key);
+      await mkdir(path.dirname(localPath), { recursive: true });
+      if (path.resolve(src) !== path.resolve(localPath)) {
+        await copyFile(src, localPath);
+      }
+      return localPath;
+    },
+    async buffer(key) {
+      return readFile(resolveSafe(key));
+    },
+    async list(directory) {
+      const dir = resolveSafe(directory.replace(/\/+$/, ''));
+      try {
+        const entries = await readdir(dir, { withFileTypes: true });
+        return entries.filter((e) => e.isFile()).map((e) => `${directory.replace(/\/+$/, '')}/${e.name}`);
+      } catch (e) {
+        if (e.code === 'ENOENT') return [];
+        throw e;
+      }
+    },
+    async remove(key) {
+      await rm(resolveSafe(key), { force: true });
+    },
+  };
+}
+
 function decodeAudioDataUrl(value) {
   const match = typeof value === 'string' && value.match(/^data:(audio\/(?:mpeg|mp3|wav|x-wav));base64,([A-Za-z0-9+/=]+)$/);
   if (!match) throw new Error('请上传有效的 MP3 或 WAV 音频文件。');
@@ -18,6 +78,16 @@ function decodeAudioDataUrl(value) {
   if (!bytes.length || bytes.length > 35 * 1024 * 1024) throw new Error('音频文件为空或超过 35 MB 限制。');
   return { bytes, mime: match[1] };
 }
+
+function decodeImageDataUrl(value) {
+  const match = typeof value === 'string' && value.match(/^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/);
+  if (!match) throw new Error('请上传有效的 PNG、JPG 或 WebP 人物图片。');
+  const bytes = Buffer.from(match[2], 'base64');
+  if (!bytes.length || bytes.length > 10 * 1024 * 1024) throw new Error('人物图片为空或超过 10 MB 限制。');
+  return { bytes, mime: match[1] };
+}
+
+const validId = (id) => typeof id === 'string' && /^[-a-zA-Z0-9_]{8,80}$/.test(id);
 
 export function buildMvSystemPrompt() {
   return `你是一位顶级音乐 MV 导演与分镜设计师，精通 MiniMax H3 音乐驱动视频生成。
@@ -42,7 +112,7 @@ export function buildMvBatchPrompt({ title, artist, genre, visualStyle, pace, in
   const styleInfo = getVisualStyle(visualStyle);
   const genreInfo = getMusicGenre(genre);
   const charText = characters?.length
-    ? characters.map((c, i) => `<Subject ${i + 1}> = ${c.name}（${c.role || 'MV 主角'}）`).join('；')
+    ? characters.map((c, i) => `<Subject ${i + 1}> = ${c.name}${c.prompt ? `（角色设定：${String(c.prompt).slice(0, 180)}）` : `（${c.role || 'MV 主角'}）`}`).join('；')
     : '无固定人物，以意象与环境叙事为主';
 
   const lines = [
@@ -55,7 +125,7 @@ export function buildMvBatchPrompt({ title, artist, genre, visualStyle, pace, in
   ];
 
   if (batchIndex > 0 && story) {
-    lines.push(`已确立的 MV 故事大纲（本批无需重复输出 story 行，直接从本批第一个 shot 开始输出）：`);
+    lines.push('已确立的 MV 故事大纲（本批无需重复输出 story 行，直接从本批第一个 shot 开始输出）：');
     lines.push(`标题：${story.title}｜故事线：${story.storyline}｜视觉母题：${story.visual_theme}｜色彩：${story.color_palette}`);
   }
   if (previousShot) {
@@ -148,9 +218,213 @@ async function streamCompletion(system, prompt, { request = fetch, signal } = {}
   return response;
 }
 
-export function mvRouter({ folder = DEFAULT_MV_DIR, videoFolder = DEFAULT_VIDEO_DIR, request = fetch, audioInspector = decodedAudioDuration, tool = mediaTool } = {}) {
+export function mvRouter({ folder = DEFAULT_MV_DIR, videoFolder = DEFAULT_VIDEO_DIR, getVideoFolder, getStore, request = fetch, audioInspector = decodedAudioDuration, tool = mediaTool } = {}) {
   const router = express.Router();
+  const localStore = createLocalStore(path.join(folder, '_store'));
+  const storeOf = (req) => (getStore ? getStore(req) : localStore);
+  const resolveVideoFolder = (req) => (getVideoFolder ? getVideoFolder(req) : videoFolder) || DEFAULT_VIDEO_DIR;
 
+  // --- Cloud / Local Character Library ---
+  router.get('/characters', async (req, res) => {
+    try {
+      const store = storeOf(req);
+      const keys = await store.list('mv-characters/');
+      const metaKeys = keys.filter((k) => k.endsWith('.json'));
+      const list = await Promise.all(
+        metaKeys.map(async (k) => {
+          const meta = await store.read(k);
+          if (!meta?.id) return null;
+          let image = '';
+          if (meta.mime) {
+            try {
+              const bytes = await store.buffer(`mv-characters/${meta.id}.image`);
+              image = `data:${meta.mime};base64,${bytes.toString('base64')}`;
+            } catch {
+              image = '';
+            }
+          }
+          return {
+            id: meta.id,
+            name: meta.name,
+            role: meta.role || 'MV 主角',
+            prompt: meta.prompt || '',
+            image,
+            updatedAt: meta.updatedAt || '',
+          };
+        }),
+      );
+      res.json({
+        characters: list.filter(Boolean).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt))),
+      });
+    } catch (e) {
+      res.status(500).json({ error: e.message || '无法读取参考人物列表。' });
+    }
+  });
+
+  router.post('/characters', express.json({ limit: '16mb' }), async (req, res) => {
+    try {
+      const store = storeOf(req);
+      const { id: rawId, name, role = 'MV 主角', prompt = '', image } = req.body ?? {};
+      const cleanName = typeof name === 'string' ? name.trim() : '';
+      if (!cleanName || cleanName.length > 60) {
+        return res.status(400).json({ error: '请输入 1–60 字的人物名称。' });
+      }
+      const cleanPrompt = typeof prompt === 'string' ? prompt.trim().slice(0, 4000) : '';
+      const id = validId(rawId) ? rawId : `CHAR-${randomUUID().slice(0, 12)}`;
+      const existing = await store.read(`mv-characters/${id}.json`);
+
+      let mime = existing?.mime || '';
+      let imageDataUrl = '';
+
+      if (typeof image === 'string' && image.startsWith('data:image/')) {
+        const decoded = decodeImageDataUrl(image);
+        mime = decoded.mime;
+        await store.bytes(`mv-characters/${id}.image`, decoded.bytes, decoded.mime);
+        imageDataUrl = image;
+      } else if (existing?.mime) {
+        try {
+          const bytes = await store.buffer(`mv-characters/${id}.image`);
+          imageDataUrl = `data:${existing.mime};base64,${bytes.toString('base64')}`;
+        } catch {
+          imageDataUrl = '';
+        }
+      }
+
+      if (!imageDataUrl) {
+        return res.status(400).json({ error: '请上传人物参考图。' });
+      }
+
+      const meta = {
+        id,
+        name: cleanName,
+        role: typeof role === 'string' && role.trim() ? role.trim().slice(0, 40) : 'MV 主角',
+        prompt: cleanPrompt,
+        mime,
+        updatedAt: new Date().toISOString(),
+      };
+      await store.write(`mv-characters/${id}.json`, meta);
+      res.json({ character: { ...meta, image: imageDataUrl } });
+    } catch (e) {
+      res.status(400).json({ error: e.message || '保存参考人物失败。' });
+    }
+  });
+
+  router.delete('/characters/:id', async (req, res) => {
+    const { id } = req.params;
+    if (!validId(id)) return res.sendStatus(400);
+    try {
+      const store = storeOf(req);
+      await Promise.all([
+        store.remove(`mv-characters/${id}.json`),
+        store.remove(`mv-characters/${id}.image`),
+      ]);
+      res.json({ ok: true, id });
+    } catch (e) {
+      res.status(500).json({ error: e.message || '删除参考人物失败。' });
+    }
+  });
+
+  // --- Cloud / Local MV Projects Persistence ---
+  router.get('/projects', async (req, res) => {
+    try {
+      const store = storeOf(req);
+      const keys = await store.list('mv-projects/');
+      const items = await Promise.all(
+        keys.filter((k) => k.endsWith('.summary.json')).map((k) => store.read(k)),
+      );
+      res.json({
+        projects: items.filter(Boolean).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt))),
+      });
+    } catch (e) {
+      res.status(500).json({ error: e.message || '无法读取 MV 项目列表。' });
+    }
+  });
+
+  router.get('/projects/:id', async (req, res) => {
+    const { id } = req.params;
+    if (!validId(id)) return res.sendStatus(404);
+    try {
+      const store = storeOf(req);
+      const data = await store.read(`mv-projects/${id}.json`);
+      if (!data) return res.status(404).json({ error: 'MV 项目不存在。' });
+      res.json(data);
+    } catch (e) {
+      res.status(500).json({ error: e.message || '无法读取 MV 项目。' });
+    }
+  });
+
+  router.post('/projects/:id', express.json({ limit: '16mb' }), async (req, res) => {
+    const { id } = req.params;
+    if (!validId(id)) return res.status(400).json({ error: 'MV 项目 ID 无效。' });
+    try {
+      const store = storeOf(req);
+      const body = req.body ?? {};
+      const slices = Array.isArray(body.session?.slices) ? body.session.slices : [];
+      const shotsObj = body.shots && typeof body.shots === 'object' ? body.shots : {};
+      const jobsObj = body.jobs && typeof body.jobs === 'object' ? body.jobs : {};
+      const completedVideos = Object.values(jobsObj).filter((j) => j?.status === 'completed' && Boolean(j.url)).length;
+      const updatedAt = new Date().toISOString();
+      const title = String(
+        body.story?.title || body.session?.meta?.title || body.audioName?.replace(/\.[^.]+$/, '') || '未命名 MV 项目',
+      ).trim().slice(0, 120);
+
+      const record = {
+        id,
+        title,
+        audioName: typeof body.audioName === 'string' ? body.audioName.slice(0, 200) : '',
+        audioDuration: Number.isFinite(body.audioDuration) ? body.audioDuration : (body.session?.durationSeconds || 0),
+        lrcText: typeof body.lrcText === 'string' ? body.lrcText.slice(0, 60000) : '',
+        lrcFileName: typeof body.lrcFileName === 'string' ? body.lrcFileName.slice(0, 200) : '',
+        visualStyle: VISUAL_STYLE_IDS.includes(body.visualStyle) ? body.visualStyle : 'cyberpunk',
+        genre: typeof body.genre === 'string' ? body.genre.slice(0, 40) : 'pop',
+        pace: body.pace === 10 ? 10 : 5,
+        aspect: typeof body.aspect === 'string' ? body.aspect.slice(0, 16) : '16:9',
+        inspiration: typeof body.inspiration === 'string' ? body.inspiration.slice(0, 4000) : '',
+        selectedCharacterIds: Array.isArray(body.selectedCharacterIds) ? body.selectedCharacterIds.filter(validId).slice(0, 4) : [],
+        session: body.session || null,
+        story: body.story || null,
+        shots: shotsObj,
+        jobs: jobsObj,
+        mergedUrl: typeof body.mergedUrl === 'string' ? body.mergedUrl : '',
+        updatedAt,
+      };
+
+      const summary = {
+        id,
+        title,
+        visualStyle: record.visualStyle,
+        genre: record.genre,
+        pace: record.pace,
+        sliceCount: slices.length,
+        scriptedCount: Object.keys(shotsObj).length,
+        completedVideos,
+        updatedAt,
+      };
+
+      await store.write(`mv-projects/${id}.json`, record);
+      await store.write(`mv-projects/${id}.summary.json`, summary);
+      res.json({ id, summary });
+    } catch (e) {
+      res.status(400).json({ error: e.message || '保存 MV 项目失败。' });
+    }
+  });
+
+  router.delete('/projects/:id', async (req, res) => {
+    const { id } = req.params;
+    if (!validId(id)) return res.sendStatus(400);
+    try {
+      const store = storeOf(req);
+      await Promise.all([
+        store.remove(`mv-projects/${id}.json`),
+        store.remove(`mv-projects/${id}.summary.json`),
+      ]);
+      res.json({ ok: true, id });
+    } catch (e) {
+      res.status(500).json({ error: e.message || '删除 MV 项目失败。' });
+    }
+  });
+
+  // --- Audio Slicing ---
   router.post('/slice', express.json({ limit: '50mb' }), async (req, res) => {
     try {
       const { audioDataUrl, filename = 'song.mp3', pace = 5, lrcText = '' } = req.body ?? {};
@@ -165,18 +439,18 @@ export function mvRouter({ folder = DEFAULT_MV_DIR, videoFolder = DEFAULT_VIDEO_
       const masterPath = path.join(sessionDir, 'master.mp3');
       await writeFile(rawPath, bytes);
 
-      if (ext === '.wav') {
-        await tool(process.env.FFMPEG_BIN || 'ffmpeg', ['-y', '-v', 'error', '-i', rawPath, '-vn', '-c:a', 'libmp3lame', '-b:a', '192k', masterPath], 120000);
-        await rm(rawPath, { force: true });
-      } else {
-        await tool(process.env.FFMPEG_BIN || 'ffmpeg', ['-y', '-v', 'error', '-i', rawPath, '-vn', '-c:a', 'libmp3lame', '-b:a', '192k', masterPath], 120000);
-        await rm(rawPath, { force: true });
-      }
+      await tool(process.env.FFMPEG_BIN || 'ffmpeg', ['-y', '-v', 'error', '-i', rawPath, '-vn', '-c:a', 'libmp3lame', '-b:a', '192k', masterPath], 120000);
+      await rm(rawPath, { force: true });
 
       const durationSeconds = await audioInspector(masterPath);
       if (durationSeconds > 600) {
         await rm(sessionDir, { recursive: true, force: true });
         return res.status(400).json({ error: '音频时长超过 10 分钟，请上传更短的歌曲。' });
+      }
+
+      const cloudStore = getStore ? getStore(req) : null;
+      if (cloudStore) {
+        await cloudStore.upload(`mv-audio/${sessionId}/master.mp3`, masterPath, 'audio/mpeg');
       }
 
       const parsed = parseLrc(typeof lrcText === 'string' ? lrcText : '');
@@ -186,7 +460,6 @@ export function mvRouter({ folder = DEFAULT_MV_DIR, videoFolder = DEFAULT_VIDEO_
         const sliceFile = `slice-${String(slice.index).padStart(3, '0')}.mp3`;
         const slicePath = path.join(sessionDir, sliceFile);
         const clipLen = Math.min(pace, Math.max(0.2, durationSeconds - slice.start));
-        // Trim slightly under pace (-0.01s) and pad if short so MiniMax H3's strict <= pace+0.02 check always succeeds
         const target = Math.max(0.2, Math.min(pace - 0.02, clipLen));
         await tool(
           process.env.FFMPEG_BIN || 'ffmpeg',
@@ -204,6 +477,9 @@ export function mvRouter({ folder = DEFAULT_MV_DIR, videoFolder = DEFAULT_VIDEO_
           ],
           60000,
         );
+        if (cloudStore) {
+          await cloudStore.upload(`mv-audio/${sessionId}/${sliceFile}`, slicePath, 'audio/mpeg');
+        }
         slice.audioUrl = `/api/mv/audio/${sessionId}/${sliceFile}`;
       }
 
@@ -229,12 +505,21 @@ export function mvRouter({ folder = DEFAULT_MV_DIR, videoFolder = DEFAULT_VIDEO_
     const filePath = path.join(folder, sessionId, file);
     try {
       await stat(filePath);
-      res.type('audio/mpeg').sendFile(filePath, { dotfiles: 'allow' });
+      return res.type('audio/mpeg').sendFile(filePath, { dotfiles: 'allow' });
     } catch {
+      if (getStore) {
+        try {
+          await getStore(req).download(`mv-audio/${sessionId}/${file}`, filePath);
+          return res.type('audio/mpeg').sendFile(filePath, { dotfiles: 'allow' });
+        } catch {
+          return res.status(404).json({ error: '音频切片不存在。' });
+        }
+      }
       res.status(404).json({ error: '音频切片不存在。' });
     }
   });
 
+  // --- Streaming MV Storyboard Generation ---
   router.post('/script-stream', express.json({ limit: '2mb' }), async (req, res) => {
     const { title = '', artist = '', genre = 'pop', visualStyle = 'realistic-3d', pace = 5, inspiration = '', characters = [], slices = [] } = req.body ?? {};
     if (!VISUAL_STYLE_IDS.includes(visualStyle) || ![5, 10].includes(pace) || !Array.isArray(slices) || !slices.length || slices.length > 120) {
@@ -350,7 +635,6 @@ export function mvRouter({ folder = DEFAULT_MV_DIR, videoFolder = DEFAULT_VIDEO_
         }
         processContent();
 
-        // Fill any slice skipped by the model in this batch so every slice always has a valid script
         for (const slice of batch) {
           if (!emitted.has(slice.index)) {
             const fallback = normalizeShot({}, slice, lastShot);
@@ -384,6 +668,7 @@ export function mvRouter({ folder = DEFAULT_MV_DIR, videoFolder = DEFAULT_VIDEO_
     }
   });
 
+  // --- Merge Completed Clips + Master MP3 ---
   router.post('/merge', express.json({ limit: '1mb' }), async (req, res) => {
     try {
       const { sessionId, videoIds } = req.body ?? {};
@@ -395,13 +680,31 @@ export function mvRouter({ folder = DEFAULT_MV_DIR, videoFolder = DEFAULT_VIDEO_
       }
 
       const sessionDir = path.join(folder, sessionId);
+      await mkdir(sessionDir, { recursive: true });
       const masterPath = path.join(sessionDir, 'master.mp3');
-      await access(masterPath);
+      const cloudStore = getStore ? getStore(req) : null;
+      try {
+        await access(masterPath);
+      } catch {
+        if (cloudStore) await cloudStore.download(`mv-audio/${sessionId}/master.mp3`, masterPath);
+        else throw new Error('原曲音频不存在，请重新上传音频切片。');
+      }
 
+      const targetVideoDir = resolveVideoFolder(req);
       const clipPaths = [];
       for (const id of videoIds) {
-        const clipPath = path.join(videoFolder, id + '.mp4');
-        await access(clipPath);
+        const clipPath = path.join(targetVideoDir, id + '.mp4');
+        try {
+          await access(clipPath);
+        } catch {
+          if (cloudStore) {
+            const downloaded = path.join(sessionDir, `clip-${id}.mp4`);
+            await cloudStore.download(`videos/${id}.mp4`, downloaded);
+            clipPaths.push(downloaded);
+            continue;
+          }
+          throw new Error(`找不到已生成的视频片段（${id}）。`);
+        }
         clipPaths.push(clipPath);
       }
 
@@ -426,6 +729,10 @@ export function mvRouter({ folder = DEFAULT_MV_DIR, videoFolder = DEFAULT_VIDEO_
         180000,
       );
 
+      if (cloudStore) {
+        await cloudStore.upload(`mv-audio/${sessionId}/merged.mp4`, mergedPath, 'video/mp4');
+      }
+
       res.json({ url: `/api/mv/merged/${sessionId}` });
     } catch (e) {
       res.status(400).json({ error: e.message || '合成完整 MV 失败，请确认所有片段均已生成。' });
@@ -438,8 +745,16 @@ export function mvRouter({ folder = DEFAULT_MV_DIR, videoFolder = DEFAULT_VIDEO_
     const mergedPath = path.join(folder, sessionId, 'merged.mp4');
     try {
       await stat(mergedPath);
-      res.type('video/mp4').sendFile(mergedPath, { dotfiles: 'allow' });
+      return res.type('video/mp4').sendFile(mergedPath, { dotfiles: 'allow' });
     } catch {
+      if (getStore) {
+        try {
+          await getStore(req).download(`mv-audio/${sessionId}/merged.mp4`, mergedPath);
+          return res.type('video/mp4').sendFile(mergedPath, { dotfiles: 'allow' });
+        } catch {
+          return res.status(404).json({ error: '完整 MV 尚未合成。' });
+        }
+      }
       res.status(404).json({ error: '完整 MV 尚未合成。' });
     }
   });

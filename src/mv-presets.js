@@ -10,6 +10,7 @@ export const DEFAULT_MV_REFERENCES = [
     recommendedStyles: ['cyberpunk', 'realistic-3d', 'anime'],
     palette: ['#080c18', '#141e3c', '#00e5ff', '#ff2a85', '#f3f7ff'],
     accent: 'neon',
+    prompt: '赛博霓虹电影质感，单人物全身 3/4 标准参考图，浅灰中性棚拍背景，清晰面部与全身比例。22 岁左右的未来女歌手 Nova，银蓝挑染利落短发，冷冽清澈眼眸带微妙高光，身穿深墨黑高领机能风皮质短外套、青蓝发光走线与洋红细飘带装饰，佩戴单侧透明金属耳返；身姿自信挺拔，画面干净无文字、无拼贴、无水印。',
   },
   {
     id: 'urban-walker',
@@ -19,6 +20,7 @@ export const DEFAULT_MV_REFERENCES = [
     recommendedStyles: ['realistic-3d', 'film-noir', 'cyberpunk'],
     palette: ['#0c0e12', '#1f2630', '#f5a623', '#60a5fa', '#e5e7eb'],
     accent: 'urban',
+    prompt: '电影级写实 3D 光影，单人物全身 3/4 标准参考图，浅灰中性棚拍背景，清晰五官与服装结构。26 岁左右的都市青年男性陆沉，微乱深黑碎短发，眼神克制深邃，身穿剪裁利落的炭黑长款羊毛风衣、内搭深灰针织高领与金属细链，脚穿做旧黑色切尔西皮靴；站姿松弛沉稳，轮廓光清晰，无文字、无拼贴、无水印。',
   },
   {
     id: 'ink-swordsman',
@@ -28,6 +30,7 @@ export const DEFAULT_MV_REFERENCES = [
     recommendedStyles: ['ink-wash', 'watercolor', '2.5d'],
     palette: ['#e9e5da', '#c7c1b0', '#2b4c59', '#9e2a2b', '#1b2428'],
     accent: 'ink',
+    prompt: '新中式国风水墨丹青质感，单人物全身 3/4 标准参考图，宣纸浅暖灰净底，清晰面部与衣袂层次。24 岁左右的清雅古风剑客清寒，长发束银冠垂落肩后，眉目清隽，身穿月白与石青渐变广袖长衫、腰系朱砂织锦束带与温润玉佩，手持古朴玄铁长剑；气韵舒展飘逸，无文字、无拼贴、无水印。',
   },
   {
     id: 'anime-band',
@@ -37,6 +40,7 @@ export const DEFAULT_MV_REFERENCES = [
     recommendedStyles: ['anime', '2.5d', 'watercolor'],
     palette: ['#1a1638', '#3c2a6e', '#ff6b9d', '#ffd166', '#ffffff'],
     accent: 'stage',
+    prompt: '日本剧场版动画赛璐璐平涂风格，干净线稿与通透高光，单人物全身 3/4 标准参考图，浅灰净底。19 岁左右的青春乐队主唱星野，深紫渐变中长发配星形金属发夹，眼瞳明亮有神，身穿米白拼接玫红学院风宽松夹克、深蓝百褶裙与厚底帆布鞋，肩背电吉他背带；气质元气热烈，无文字、无拼贴、无水印。',
   },
   {
     id: 'starlight-drifter',
@@ -46,6 +50,7 @@ export const DEFAULT_MV_REFERENCES = [
     recommendedStyles: ['realistic-3d', '2.5d', 'oil-painting'],
     palette: ['#060814', '#162447', '#7b2cbf', '#4cc9f0', '#f8fafc'],
     accent: 'cosmos',
+    prompt: '科幻电影写实渲染质感，单人物全身 3/4 标准参考图，浅灰中性棚拍光背景，细节清晰。25 岁左右的深空探索者 Aria，浅金低马尾长发，神情沉静坚毅，身穿珠光白与深空蓝轻量化星际宇航服、胸前带冰蓝能量指示灯与可拆卸金属头盔提在手侧；材质呈现陶瓷哑光与织物层次，无文字、无拼贴、无水印。',
   },
   {
     id: 'retro-vinyl',
@@ -55,6 +60,7 @@ export const DEFAULT_MV_REFERENCES = [
     recommendedStyles: ['oil-painting', 'film-noir', 'pixar-clay'],
     palette: ['#1c1410', '#3d281c', '#d4a373', '#e76f51', '#f6efe4'],
     accent: 'retro',
+    prompt: '复古 35mm 暖调电影胶片质感，单人物全身 3/4 标准参考图，浅暖灰棚拍背景，面部清晰柔和。27 岁左右的复古爵士女郎曼妮，微卷焦糖棕齐肩短发，眉眼温柔典雅，身穿酒红丝绒收腰复古连衣裙、搭配米金色细针织披肩与珍珠耳饰，手持一张复古黑胶唱片；暖金柔光勾勒轮廓，无文字、无拼贴、无水印。',
   },
 ];
 

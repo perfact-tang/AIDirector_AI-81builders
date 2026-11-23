@@ -1,6 +1,10 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Check, Film, LoaderCircle, Music, Play, Sparkles, Square, Upload, Video, Wand2, Zap, MoveRight, Download, Trash2, Layers } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import {
+  Check, Copy, Edit3, Film, LoaderCircle, Music, Play, Plus, RefreshCw, Save,
+  Sparkles, Square, Upload, Video, Volume2, Wand2, Zap, MoveRight, Download, Trash2, Layers,
+} from 'lucide-react';
 import { useI18n } from './LanguageProvider.jsx';
+import { useAuth } from './AuthProvider.jsx';
 import { VISUAL_STYLES } from './visual-styles.js';
 import { MUSIC_GENRES, parseLrc, formatClock } from './mv-lrc.js';
 import { DEFAULT_MV_REFERENCES, renderPresetDataUrl } from './mv-presets.js';
@@ -8,6 +12,8 @@ import { readImage } from './character-images.js';
 import { extractLastFrame } from './video-last-frame.js';
 import { fingerprint } from './video-references.js';
 import { downloadZip } from './download-zip.js';
+import { SpeechReader, SPEECH_LANGUAGES } from './speech.js';
+import { Modal } from './GenerationDialog.jsx';
 import MediaPlaylist from './MediaPlaylist.jsx';
 
 const STATUS_LABELS = {
@@ -21,6 +27,8 @@ const STATUS_LABELS = {
   canceled: '任务已结束',
   submission_unknown: '提交状态待确认，请先检查 ai& 控制台',
 };
+
+const ACTIVE_MV_STORAGE_KEY = 'director-mv-active-id';
 
 const isTerminal = (job) =>
   ['failed', 'canceled', 'submission_unknown'].includes(job?.status) ||
@@ -57,11 +65,57 @@ async function fetchAsDataUrl(url, signal) {
   return readFileAsDataUrl(blob);
 }
 
+async function apiJson(url, options = {}) {
+  const res = await fetch(url, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...options.headers },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (res.status === 401) location.assign('/');
+    throw new Error(data.error || '请求失败。');
+  }
+  return data;
+}
+
+function syncMvUrl(id) {
+  try {
+    const url = new URL(location.href);
+    url.searchParams.set('mode', 'mv');
+    if (id) url.searchParams.set('mv', id);
+    else url.searchParams.delete('mv');
+    history.replaceState({}, '', url.pathname + url.search);
+    if (id) localStorage.setItem(ACTIVE_MV_STORAGE_KEY, id);
+    else localStorage.removeItem(ACTIVE_MV_STORAGE_KEY);
+  } catch {
+    // Ignore storage/history restrictions
+  }
+}
+
 export default function MvStudio() {
   const { t } = useI18n();
+  const { enabled: cloudEnabled } = useAuth();
+
+  // Saved MV projects list & active project ID
+  const [projectId, setProjectId] = useState(() => {
+    const q = new URLSearchParams(location.search).get('mv');
+    if (q) return q;
+    try { return localStorage.getItem(ACTIVE_MV_STORAGE_KEY) || crypto.randomUUID(); } catch { return crypto.randomUUID(); }
+  });
+  const [projects, setProjects] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('');
+  const [hydrated, setHydrated] = useState(false);
+
+  // Cloud / Local Character Library
+  const [characters, setCharacters] = useState([]);
+  const [charactersLoading, setCharactersLoading] = useState(false);
+  const [selectedCharIds, setSelectedCharIds] = useState([]);
+  const [charModal, setCharModal] = useState(null); // null | { id?, name, prompt, image, saving, error }
+  const [copiedPrompt, setCopiedPrompt] = useState(false);
 
   // Form state
-  const [audioFile, setAudioFile] = useState(null); // { name, dataUrl, objectUrl, duration }
+  const [audioFile, setAudioFile] = useState(null); // { name, dataUrl?, objectUrl?, url?, duration }
   const [lrcText, setLrcText] = useState('');
   const [lrcFileName, setLrcFileName] = useState('');
   const [visualStyle, setVisualStyle] = useState('cyberpunk');
@@ -69,21 +123,19 @@ export default function MvStudio() {
   const [pace, setPace] = useState(5);
   const [aspect, setAspect] = useState('16:9');
   const [inspiration, setInspiration] = useState('');
-  const [selectedPresets, setSelectedPresets] = useState(['neon-vocalist']);
-  const [customRefs, setCustomRefs] = useState([]); // [{ id, name, image }]
-  const [autoGenerateH3, setAutoGenerateH3] = useState(true);
 
-  // Preset thumbnail cache
-  const [presetImages, setPresetImages] = useState({});
+  // Speech synthesis for reading MV scripts aloud
+  const [speech, setSpeech] = useState({});
+  const [speechLang, setSpeechLang] = useState('zh-CN');
+  const reader = useMemo(
+    () => new SpeechReader({ synth: window.speechSynthesis, Utterance: window.SpeechSynthesisUtterance, onState: setSpeech }),
+    [],
+  );
   useEffect(() => {
-    const map = {};
-    for (const preset of DEFAULT_MV_REFERENCES) {
-      map[preset.id] = renderPresetDataUrl(preset);
-    }
-    setPresetImages(map);
-  }, []);
+    reader.stop();
+  }, [speechLang, reader]);
 
-  // Cleanup audio objectUrl on unmount
+  // Cleanup local blob URL on unmount/change
   useEffect(() => {
     return () => {
       if (audioFile?.objectUrl) URL.revokeObjectURL(audioFile.objectUrl);
@@ -94,15 +146,15 @@ export default function MvStudio() {
   const [phase, setPhase] = useState('idle'); // idle | slicing | scripting | ready
   const [statusMsg, setStatusMsg] = useState('');
   const [error, setError] = useState('');
-  const [session, setSession] = useState(null); // { sessionId, durationSeconds, pace, meta, masterAudioUrl, slices }
+  const [session, setSession] = useState(null);
   const [story, setStory] = useState(null);
-  const [shots, setShots] = useState({}); // { [index]: shot }
+  const [shots, setShots] = useState({});
   const [scriptProgress, setScriptProgress] = useState({ completed: 0, total: 0 });
 
   // MiniMax H3 video generation state
   const [videoConfig, setVideoConfig] = useState(null);
-  const [jobs, setJobs] = useState({}); // { [index]: videoJob }
-  const [queue, setQueue] = useState([]); // number[]
+  const [jobs, setJobs] = useState({});
+  const [queue, setQueue] = useState([]);
   const [videoBusy, setVideoBusy] = useState(false);
   const [videoMessage, setVideoMessage] = useState('');
   const [playlist, setPlaylist] = useState(null);
@@ -118,7 +170,127 @@ export default function MvStudio() {
   shotsRef.current = shots;
   const sessionRef = useRef(session);
   sessionRef.current = session;
+  const saveChainRef = useRef(Promise.resolve());
 
+  // --- Loaders ---
+  const refreshProjects = useCallback(async () => {
+    setProjectsLoading(true);
+    try {
+      const data = await apiJson('/api/mv/projects');
+      setProjects(data.projects || []);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setProjectsLoading(false);
+    }
+  }, []);
+
+  const refreshCharacters = useCallback(async () => {
+    setCharactersLoading(true);
+    try {
+      const data = await apiJson('/api/mv/characters');
+      setCharacters(data.characters || []);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setCharactersLoading(false);
+    }
+  }, []);
+
+  const applyProjectData = useCallback((data) => {
+    scriptAbortRef.current?.abort();
+    videoAbortRef.current?.abort();
+    reader.stop();
+    setProjectId(data.id);
+    syncMvUrl(data.id);
+    setLrcText(data.lrcText || '');
+    setLrcFileName(data.lrcFileName || '');
+    setVisualStyle(data.visualStyle || 'cyberpunk');
+    setGenre(data.genre || 'pop');
+    setPace(data.pace === 10 ? 10 : 5);
+    setAspect(data.aspect || '16:9');
+    setInspiration(data.inspiration || '');
+    setSelectedCharIds(Array.isArray(data.selectedCharacterIds) ? data.selectedCharacterIds : []);
+    setSession(data.session || null);
+    sessionRef.current = data.session || null;
+    setStory(data.story || null);
+    setShots(data.shots || {});
+    shotsRef.current = data.shots || {};
+    setJobs(data.jobs || {});
+    jobsRef.current = data.jobs || {};
+    setMergedUrl(data.mergedUrl || '');
+    setQueue([]);
+    setVideoBusy(false);
+    setError('');
+    setVideoMessage('');
+    if (data.session?.masterAudioUrl || data.audioName) {
+      setAudioFile({
+        name: data.audioName || `${data.title || 'song'}.mp3`,
+        url: data.session?.masterAudioUrl || '',
+        duration: data.audioDuration || data.session?.durationSeconds || 0,
+      });
+    } else {
+      setAudioFile(null);
+    }
+    const sliceCount = data.session?.slices?.length || 0;
+    const shotCount = Object.keys(data.shots || {}).length;
+    setScriptProgress({ completed: shotCount, total: sliceCount });
+    setPhase(sliceCount ? 'ready' : 'idle');
+    setStatusMsg(shotCount ? `已恢复 MV 项目（共 ${shotCount} 条分镜）。` : '');
+    setSaveStatus('已恢复保存的 MV 项目');
+  }, [reader]);
+
+  const openProject = useCallback(async (id) => {
+    setError('');
+    try {
+      const data = await apiJson(`/api/mv/projects/${encodeURIComponent(id)}`);
+      applyProjectData(data);
+    } catch (e) {
+      setError(e.message);
+    }
+  }, [applyProjectData]);
+
+  function startNewProject() {
+    scriptAbortRef.current?.abort();
+    videoAbortRef.current?.abort();
+    reader.stop();
+    const nextId = crypto.randomUUID();
+    setProjectId(nextId);
+    syncMvUrl(nextId);
+    setAudioFile(null);
+    setLrcText('');
+    setLrcFileName('');
+    setInspiration('');
+    setSession(null);
+    sessionRef.current = null;
+    setStory(null);
+    setShots({});
+    shotsRef.current = {};
+    setJobs({});
+    jobsRef.current = {};
+    setQueue([]);
+    setVideoBusy(false);
+    setMergedUrl('');
+    setPhase('idle');
+    setStatusMsg('');
+    setVideoMessage('');
+    setError('');
+    setSaveStatus('');
+    setScriptProgress({ completed: 0, total: 0 });
+  }
+
+  async function deleteProject(id, e) {
+    e.stopPropagation();
+    try {
+      await apiJson(`/api/mv/projects/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+      if (id === projectId) startNewProject();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  // Initial mount: load video config, saved MV projects, saved characters, and restore active MV project
   async function loadVideoConfig() {
     try {
       const res = await fetch('/api/videos/config');
@@ -130,53 +302,265 @@ export default function MvStudio() {
   }
 
   useEffect(() => {
+    let active = true;
     loadVideoConfig();
+    Promise.all([refreshProjects(), refreshCharacters()]).then(async () => {
+      if (!active) return;
+      const targetId = new URLSearchParams(location.search).get('mv') || (() => {
+        try { return localStorage.getItem(ACTIVE_MV_STORAGE_KEY); } catch { return null; }
+      })();
+      if (targetId) {
+        try {
+          const saved = await apiJson(`/api/mv/projects/${encodeURIComponent(targetId)}`);
+          if (active && saved?.id) applyProjectData(saved);
+        } catch {
+          // Not saved yet; keep fresh project ID
+        }
+      }
+      if (active) setHydrated(true);
+    });
     return () => {
+      active = false;
       scriptAbortRef.current?.abort();
       videoAbortRef.current?.abort();
+      reader.stop();
     };
-  }, []);
+  }, [reader, refreshProjects, refreshCharacters, applyProjectData]);
+
+  // Recover any in-progress H3 video jobs after page reload
+  useEffect(() => {
+    if (!hydrated || !session) return;
+    const controller = new AbortController();
+    let timer;
+    async function pollPending() {
+      let hasActive = false;
+      for (const [idx, job] of Object.entries(jobsRef.current)) {
+        if (controller.signal.aborted) break;
+        if (!job?.id || isTerminal(job) || queue.includes(Number(idx))) continue;
+        hasActive = true;
+        try {
+          const res = await fetch(`/api/videos/${encodeURIComponent(job.id)}`, { signal: controller.signal });
+          if (!res.ok) continue;
+          const remote = await res.json();
+          setJobs((prev) => (prev[idx]?.id === job.id ? { ...prev, [idx]: { ...prev[idx], ...remote } } : prev));
+        } catch (err) {
+          if (err.name === 'AbortError') break;
+        }
+      }
+      if (hasActive && !controller.signal.aborted) {
+        timer = setTimeout(pollPending, 15000);
+      }
+    }
+    pollPending();
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [hydrated, session?.sessionId, queue]);
+
+  // Save current MV project
+  const persistCurrentProject = useCallback(async (quiet = true) => {
+    const hasContent = Boolean(session || story || Object.keys(shots).length || lrcText.trim() || inspiration.trim());
+    if (!hasContent) return;
+    if (!quiet) setSaveStatus('正在保存 MV 项目…');
+    const payload = {
+      audioName: audioFile?.name || '',
+      audioDuration: audioFile?.duration || session?.durationSeconds || 0,
+      lrcText,
+      lrcFileName,
+      visualStyle,
+      genre,
+      pace,
+      aspect,
+      inspiration,
+      selectedCharacterIds: selectedCharIds,
+      session,
+      story,
+      shots,
+      jobs,
+      mergedUrl,
+    };
+    const task = saveChainRef.current
+      .catch(() => {})
+      .then(async () => {
+        const res = await apiJson(`/api/mv/projects/${encodeURIComponent(projectId)}`, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+        syncMvUrl(projectId);
+        if (res.summary) {
+          setProjects((prev) => [res.summary, ...prev.filter((p) => p.id !== res.summary.id)]);
+        }
+        setSaveStatus(cloudEnabled ? 'MV 项目已自动保存到云端' : 'MV 项目已自动保存');
+      })
+      .catch((err) => {
+        setSaveStatus(`保存失败：${err.message}`);
+      });
+    saveChainRef.current = task;
+    return task;
+  }, [
+    projectId, audioFile?.name, audioFile?.duration, lrcText, lrcFileName,
+    visualStyle, genre, pace, aspect, inspiration, selectedCharIds,
+    session, story, shots, jobs, mergedUrl, cloudEnabled,
+  ]);
+
+  // Auto-save whenever state updates after hydration
+  useEffect(() => {
+    if (!hydrated || phase === 'slicing') return;
+    const hasContent = Boolean(session || story || Object.keys(shots).length || lrcText.trim() || inspiration.trim());
+    if (!hasContent) return;
+    const timer = setTimeout(() => {
+      persistCurrentProject(true);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [hydrated, phase, persistCurrentProject, session, story, shots, lrcText, inspiration]);
+
+  // --- Character Library Actions ---
+  function toggleCharacterSelect(id) {
+    setSelectedCharIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id].slice(-4),
+    );
+  }
+
+  function openAddCharacter() {
+    setCopiedPrompt(false);
+    setCharModal({ id: '', name: '', prompt: '', image: '', saving: false, error: '' });
+  }
+
+  function openEditCharacter(character, e) {
+    e.stopPropagation();
+    setCopiedPrompt(false);
+    setCharModal({
+      id: character.id,
+      name: character.name,
+      prompt: character.prompt || '',
+      image: character.image || '',
+      saving: false,
+      error: '',
+    });
+  }
+
+  async function handleModalImageUpload(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const image = await readImage(file);
+      setCharModal((m) => (m ? { ...m, image, error: '' } : m));
+    } catch (err) {
+      setCharModal((m) => (m ? { ...m, error: err.message } : m));
+    }
+  }
+
+  async function saveCharacterModal(e) {
+    e.preventDefault();
+    if (!charModal) return;
+    if (!charModal.name.trim()) {
+      setCharModal((m) => ({ ...m, error: '请输入人物名称。' }));
+      return;
+    }
+    if (!charModal.image) {
+      setCharModal((m) => ({ ...m, error: '请先上传人物参考图。' }));
+      return;
+    }
+    setCharModal((m) => ({ ...m, saving: true, error: '' }));
+    try {
+      const res = await apiJson('/api/mv/characters', {
+        method: 'POST',
+        body: JSON.stringify({
+          id: charModal.id || undefined,
+          name: charModal.name.trim(),
+          prompt: charModal.prompt.trim(),
+          image: charModal.image,
+        }),
+      });
+      const saved = res.character;
+      setCharacters((prev) => [saved, ...prev.filter((c) => c.id !== saved.id)]);
+      if (!charModal.id) {
+        setSelectedCharIds((prev) => (prev.includes(saved.id) ? prev : [...prev, saved.id].slice(-4)));
+      }
+      setCharModal(null);
+    } catch (err) {
+      setCharModal((m) => (m ? { ...m, saving: false, error: err.message } : m));
+    }
+  }
+
+  async function deleteCharacterModal() {
+    if (!charModal?.id) return;
+    setCharModal((m) => ({ ...m, saving: true, error: '' }));
+    try {
+      await apiJson(`/api/mv/characters/${encodeURIComponent(charModal.id)}`, { method: 'DELETE' });
+      setCharacters((prev) => prev.filter((c) => c.id !== charModal.id));
+      setSelectedCharIds((prev) => prev.filter((id) => id !== charModal.id));
+      setCharModal(null);
+    } catch (err) {
+      setCharModal((m) => (m ? { ...m, saving: false, error: err.message } : m));
+    }
+  }
+
+  async function copyModalPrompt() {
+    if (!charModal?.prompt?.trim()) return;
+    try {
+      await navigator.clipboard.writeText(charModal.prompt);
+      setCopiedPrompt(true);
+      setTimeout(() => setCopiedPrompt(false), 2000);
+    } catch {
+      setCharModal((m) => (m ? { ...m, error: '无法复制到剪贴板，请手动选中复制。' } : m));
+    }
+  }
+
+  async function seedStarterCharacters() {
+    setCharactersLoading(true);
+    setError('');
+    try {
+      const starters = DEFAULT_MV_REFERENCES.slice(0, 3);
+      const created = [];
+      for (const preset of starters) {
+        const image = renderPresetDataUrl(preset);
+        const res = await apiJson('/api/mv/characters', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: preset.name,
+            role: preset.role,
+            prompt: preset.prompt,
+            image,
+          }),
+        });
+        created.push(res.character);
+      }
+      setCharacters((prev) => [...created, ...prev]);
+      if (!selectedCharIds.length && created[0]) {
+        setSelectedCharIds([created[0].id]);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCharactersLoading(false);
+    }
+  }
 
   const parsedLrc = useMemo(() => parseLrc(lrcText), [lrcText]);
   const estimatedSlices = audioFile?.duration ? Math.max(1, Math.ceil(audioFile.duration / pace)) : 0;
 
-  // Build active character/reference images for script + MiniMax H3
+  // Active references sent to script & MiniMax H3
   const activeReferences = useMemo(() => {
-    const list = [];
-    for (const id of selectedPresets) {
-      const preset = DEFAULT_MV_REFERENCES.find((p) => p.id === id);
-      if (preset && presetImages[id]) {
-        list.push({
-          character_id: `CHAR-PRESET-${preset.id.toUpperCase()}`,
-          name: preset.name,
-          role: preset.role,
-          image: presetImages[id],
-        });
-      }
+    const selected = characters.filter((c) => selectedCharIds.includes(c.id) && c.image);
+    if (selected.length) {
+      return selected.slice(0, 4).map((c) => ({
+        character_id: c.id,
+        name: c.name,
+        role: c.role || 'MV 主角',
+        prompt: c.prompt || '',
+        image: c.image,
+      }));
     }
-    for (const custom of customRefs) {
-      if (custom.image) {
-        list.push({
-          character_id: custom.id,
-          name: custom.name.trim() || '自定义参考',
-          role: '用户参考图',
-          image: custom.image,
-        });
-      }
-    }
-    if (!list.length) {
-      const fallback = DEFAULT_MV_REFERENCES.find((p) => p.recommendedStyles.includes(visualStyle)) || DEFAULT_MV_REFERENCES[0];
-      if (fallback && presetImages[fallback.id]) {
-        list.push({
-          character_id: `CHAR-PRESET-${fallback.id.toUpperCase()}`,
-          name: fallback.name,
-          role: fallback.role,
-          image: presetImages[fallback.id],
-        });
-      }
-    }
-    return list.slice(0, 4);
-  }, [selectedPresets, presetImages, customRefs, visualStyle]);
+    // Safe fallback if user did not select any character
+    const fallback = DEFAULT_MV_REFERENCES.find((p) => p.recommendedStyles.includes(visualStyle)) || DEFAULT_MV_REFERENCES[0];
+    const fallbackImage = renderPresetDataUrl(fallback);
+    return fallbackImage
+      ? [{ character_id: `CHAR-PRESET-${fallback.id.toUpperCase()}`, name: fallback.name, role: fallback.role, prompt: fallback.prompt, image: fallbackImage }]
+      : [];
+  }, [characters, selectedCharIds, visualStyle]);
 
   async function handleAudioUpload(e) {
     const file = e.target.files?.[0];
@@ -218,29 +602,6 @@ export default function MvStudio() {
     }
   }
 
-  async function handleCustomRefUpload(e) {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    setError('');
-    try {
-      const image = await readImage(file);
-      const idx = customRefs.length + 1;
-      setCustomRefs((prev) => [
-        ...prev.slice(0, 3),
-        { id: `CHAR-USER-${Date.now().toString(36)}`, name: `自定义主角 ${idx}`, image },
-      ]);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  function togglePreset(id) {
-    setSelectedPresets((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id].slice(-3),
-    );
-  }
-
   function updateShot(index, patch) {
     setShots((prev) => ({
       ...prev,
@@ -270,7 +631,7 @@ export default function MvStudio() {
     setQueue(indices);
     setVideoBusy(true);
     setMergedUrl('');
-    setVideoMessage(`已加入 ${indices.length} 个 MV 切片，全自动依次生成 MiniMax H3 视频…`);
+    setVideoMessage(`已加入 ${indices.length} 个 MV 切片，依次生成 MiniMax H3 视频…`);
 
     try {
       for (let pos = 0; pos < indices.length; pos++) {
@@ -386,7 +747,8 @@ export default function MvStudio() {
 
   async function handleStartMv(e) {
     e.preventDefault();
-    if (!audioFile?.dataUrl) {
+    const canReuseExistingAudio = Boolean(session?.masterAudioUrl && !audioFile?.dataUrl);
+    if (!audioFile?.dataUrl && !canReuseExistingAudio) {
       setError('请先上传 MP3 或 WAV 歌曲文件。');
       return;
     }
@@ -408,12 +770,17 @@ export default function MvStudio() {
     setStatusMsg(`正在按每 ${pace} 秒自动切片音频并对齐 LRC 歌词…`);
 
     try {
+      let audioDataUrl = audioFile?.dataUrl;
+      if (!audioDataUrl && session?.masterAudioUrl) {
+        audioDataUrl = await fetchAsDataUrl(session.masterAudioUrl, controller.signal);
+      }
+
       const sliceRes = await fetch('/api/mv/slice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          audioDataUrl: audioFile.dataUrl,
-          filename: audioFile.name,
+          audioDataUrl,
+          filename: audioFile?.name || 'song.mp3',
           pace,
           lrcText,
         }),
@@ -432,13 +799,13 @@ export default function MvStudio() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: sliceData.meta?.title || audioFile.name.replace(/\.[^.]+$/, ''),
+          title: sliceData.meta?.title || (audioFile?.name || 'song').replace(/\.[^.]+$/, ''),
           artist: sliceData.meta?.artist || '',
           genre,
           visualStyle,
           pace,
           inspiration,
-          characters: activeReferences.map((r) => ({ name: r.name, role: r.role })),
+          characters: activeReferences.map((r) => ({ name: r.name, role: r.role, prompt: r.prompt })),
           slices: sliceData.slices,
         }),
         signal: controller.signal,
@@ -449,13 +816,13 @@ export default function MvStudio() {
         throw new Error(errData.error || '无法启动 MV 脚本生成。');
       }
 
-      const reader = streamRes.body.getReader();
+      const readerStream = streamRes.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
       const collectedShots = {};
 
       while (true) {
-        const { done, value } = await reader.read();
+        const { done, value } = await readerStream.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
         const events = buffer.split('\n\n');
@@ -487,14 +854,7 @@ export default function MvStudio() {
 
       shotsRef.current = collectedShots;
       setPhase('ready');
-      setStatusMsg(`MV 脚本已全部生成（共 ${Object.keys(collectedShots).length} 条镜头）。`);
-
-      if (autoGenerateH3 && (!videoConfig || videoConfig.accepted)) {
-        const allIndices = sliceData.slices.map((s) => s.index).filter((idx) => Boolean(collectedShots[idx]));
-        if (allIndices.length) {
-          startVideoQueue(allIndices, sliceData, collectedShots);
-        }
-      }
+      setStatusMsg(`分镜动态提示词已全部生成（共 ${Object.keys(collectedShots).length} 条镜头）。请先审阅或朗读检查，确认无误后点击「生成全部」。`);
     } catch (err) {
       if (err.name === 'AbortError') return;
       setError(err.message || 'MV 生成流程失败。');
@@ -510,6 +870,13 @@ export default function MvStudio() {
     .map((s) => s.index)
     .filter((i) => shots[i] && !(jobs[i]?.status === 'completed' && jobs[i]?.url));
   const allScriptedIndices = slices.map((s) => s.index).filter((i) => Boolean(shots[i]));
+  const speechItems = slices
+    .filter((s) => shots[s.index]?.video_prompt?.trim())
+    .map((s) => ({
+      key: `mv-shot-${s.index}`,
+      label: `${s.shotId} · ${shots[s.index].section || s.section}`,
+      text: shots[s.index].video_prompt.trim(),
+    }));
   const price = videoConfig?.pricing?.find((p) => p.resolution === '768p');
 
   async function handleMergeMv() {
@@ -567,10 +934,161 @@ export default function MvStudio() {
   }
 
   const busyInput = phase === 'slicing' || phase === 'scripting';
+  const audioPreviewSrc = audioFile?.objectUrl || audioFile?.url || session?.masterAudioUrl || '';
 
   return (
     <div className="mv-studio">
       {playlist && <MediaPlaylist items={playlist} type="video" onClose={() => setPlaylist(null)} />}
+
+      {/* Add / Edit Character Modal */}
+      {charModal && (
+        <Modal
+          title={t(charModal.id ? '编辑参考人物' : '添加参考人物')}
+          onCancel={() => !charModal.saving && setCharModal(null)}
+          footer={
+            <div className="mv-modal-footer-row">
+              {charModal.id && (
+                <button
+                  type="button"
+                  className="small-button mv-danger-btn"
+                  disabled={charModal.saving}
+                  onClick={deleteCharacterModal}
+                >
+                  <Trash2 size={13} /> {t('删除人物')}
+                </button>
+              )}
+              <div className="speech-actions">
+                <button
+                  type="button"
+                  className="small-button"
+                  disabled={charModal.saving}
+                  onClick={() => setCharModal(null)}
+                >
+                  {t('取消')}
+                </button>
+                <button
+                  type="submit"
+                  form="mv-char-form"
+                  className="small-button save-image"
+                  disabled={charModal.saving}
+                >
+                  {charModal.saving ? <LoaderCircle className="spin" size={13} /> : <Save size={13} />}
+                  {' '}
+                  {t(charModal.saving ? '正在保存…' : '保存人物')}
+                </button>
+              </div>
+            </div>
+          }
+        >
+          <form id="mv-char-form" className="mv-char-form" onSubmit={saveCharacterModal}>
+            <label className="voice-label" htmlFor="mv-char-name">{t('人物名称')}</label>
+            <input
+              id="mv-char-name"
+              className="shot-search"
+              type="text"
+              maxLength={60}
+              value={charModal.name}
+              onChange={(e) => setCharModal((m) => ({ ...m, name: e.target.value }))}
+              placeholder={t('例如：赛博歌姬 Nova')}
+            />
+
+            <div className="voice-label">
+              <span>{t('人物参考图')}</span>
+              <label className="small-button upload-button">
+                <Upload size={13} /> {t(charModal.image ? '更换人物图' : '上传人物图')}
+                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleModalImageUpload} />
+              </label>
+            </div>
+            <div className="image-preview mv-char-modal-preview">
+              {charModal.image ? (
+                <img src={charModal.image} alt={charModal.name || t('人物参考图')} />
+              ) : (
+                <div>
+                  <span>+</span>
+                  <p>{t('上传 PNG / JPG / WebP 人物图（10 MB 以内）')}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="voice-label">
+              <label htmlFor="mv-char-prompt">{t('人物提示词（生图 / 角色设定描述）')}</label>
+              {charModal.prompt?.trim() && (
+                <button type="button" className="small-button" onClick={copyModalPrompt}>
+                  {copiedPrompt ? <Check size={12} /> : <Copy size={12} />} {t(copiedPrompt ? '已复制提示词' : '复制提示词')}
+                </button>
+              )}
+            </div>
+            <textarea
+              id="mv-char-prompt"
+              className="voice-textarea"
+              maxLength={4000}
+              value={charModal.prompt}
+              onChange={(e) => setCharModal((m) => ({ ...m, prompt: e.target.value }))}
+              placeholder={t('写下人物的外貌、服装、风格与气质描述，方便复用于生图和分镜脚本…')}
+            />
+
+            {charModal.error && <p className="tts-error" role="alert">{t(charModal.error)}</p>}
+          </form>
+        </Modal>
+      )}
+
+      {/* Saved MV Projects Panel (Cloud & Local) */}
+      <section className="cloud-projects mv-projects-panel">
+        <div className="section-heading">
+          <h2>{t(cloudEnabled ? '我的云端 MV 项目' : '我的 MV 项目')}</h2>
+          <div className="speech-actions">
+            {saveStatus && <span className="image-hint">{t(saveStatus)}</span>}
+            <button type="button" className="small-button" onClick={startNewProject}>
+              <Plus size={13} /> {t('新建 MV 项目')}
+            </button>
+            <button
+              type="button"
+              className="small-button"
+              disabled={busyInput || (!session && !story && !Object.keys(shots).length && !lrcText.trim())}
+              onClick={() => persistCurrentProject(false)}
+            >
+              <Save size={13} /> {t('立即保存')}
+            </button>
+            <button type="button" className="small-button" disabled={projectsLoading} onClick={refreshProjects}>
+              <RefreshCw size={13} /> {t('刷新')}
+            </button>
+          </div>
+        </div>
+        {projects.length ? (
+          <div className="mv-project-list">
+            {projects.map((item) => (
+              <div
+                key={item.id}
+                role="button"
+                tabIndex={0}
+                className={`cloud-project-row mv-project-row ${item.id === projectId ? 'is-current' : ''}`}
+                onClick={() => openProject(item.id)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openProject(item.id); }}
+              >
+                <div>
+                  <strong>{item.title}</strong>
+                  {item.id === projectId && <span className="mv-tag">{t('当前')}</span>}
+                </div>
+                <div className="mv-project-meta">
+                  <span>
+                    {item.sliceCount} {t('切片')} · {item.scriptedCount} {t('分镜')} · {item.completedVideos} {t('视频')} · {new Date(item.updatedAt).toLocaleString()}
+                  </span>
+                  <button
+                    type="button"
+                    className="small-button"
+                    aria-label={t('删除项目')}
+                    onClick={(e) => deleteProject(item.id, e)}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="image-hint">{t('生成 MV 脚本或编辑内容后，项目会自动保存，刷新页面不会丢失。')}</p>
+        )}
+      </section>
 
       <form onSubmit={handleStartMv}>
         <fieldset disabled={busyInput} className="brief-fieldset">
@@ -601,7 +1119,7 @@ export default function MvStudio() {
                         {formatClock(audioFile.duration)} · {t('预计切分')} {estimatedSlices} {t('段')}（{pace}s/{t('镜')}）
                       </small>
                     </div>
-                    <audio controls src={audioFile.objectUrl} />
+                    {audioPreviewSrc && <audio controls src={audioPreviewSrc} />}
                   </div>
                 ) : (
                   <div className="mv-empty-drop">{t('尚未上传音频文件（最大 35 MB，最长 10 分钟）')}</div>
@@ -751,84 +1269,82 @@ export default function MvStudio() {
             </div>
           </section>
 
-          {/* 04 Reference Characters / Images */}
+          {/* 04 Cloud-Saved Character Library (Multi-select + Add + Edit) */}
           <section className="mv-section">
             <div className="section-heading">
-              <h2><span>04</span>{t('参考人物 / 参考图（可选）')}</h2>
-              <span className="section-note">{t('可直接选用系统默认参考，或上传用其他 AI 生成的人物图')}</span>
-            </div>
-
-            <div className="mv-preset-grid">
-              {DEFAULT_MV_REFERENCES.map((preset) => {
-                const selected = selectedPresets.includes(preset.id);
-                return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    className={`mv-preset-card ${selected ? 'selected' : ''}`}
-                    onClick={() => togglePreset(preset.id)}
-                  >
-                    {presetImages[preset.id] && <img src={presetImages[preset.id]} alt={preset.name} />}
-                    <span className="selection">{selected && <Check size={13} />}</span>
-                    <div className="mv-preset-info">
-                      <strong>{t(preset.name)}</strong>
-                      <small>{t(preset.tag)}</small>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="mv-custom-refs">
-              <div className="mv-custom-header">
-                <label className="small-button upload-button">
-                  <Upload size={13} /> {t('上传自定义参考人物 / 参考图')}
-                  <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleCustomRefUpload} />
-                </label>
-                <span className="image-hint">{t('最多同时使用 4 张参考图；若未勾选，将自动匹配所选画风的默认参考图。')}</span>
+              <h2><span>04</span>{t('我的参考人物')}</h2>
+              <div className="speech-actions">
+                <span className="section-note">{t('云端保存，点击卡片可多选（最多 4 位）')}</span>
+                <button type="button" className="small-button save-image" onClick={openAddCharacter}>
+                  <Plus size={13} /> {t('添加人物')}
+                </button>
               </div>
-
-              {customRefs.length > 0 && (
-                <div className="mv-custom-list">
-                  {customRefs.map((ref, idx) => (
-                    <div className="mv-custom-item" key={ref.id}>
-                      <img src={ref.image} alt={ref.name} />
-                      <input
-                        type="text"
-                        value={ref.name}
-                        maxLength={40}
-                        aria-label={t('参考人物名称')}
-                        onChange={(e) =>
-                          setCustomRefs((prev) =>
-                            prev.map((item, n) => (n === idx ? { ...item, name: e.target.value } : item)),
-                          )
-                        }
-                      />
-                      <button
-                        type="button"
-                        className="small-button"
-                        onClick={() => setCustomRefs((prev) => prev.filter((_, n) => n !== idx))}
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
+
+            {characters.length > 0 ? (
+              <div className="mv-preset-grid">
+                {characters.map((character) => {
+                  const selected = selectedCharIds.includes(character.id);
+                  return (
+                    <div
+                      key={character.id}
+                      role="checkbox"
+                      aria-checked={selected}
+                      tabIndex={0}
+                      className={`mv-preset-card mv-char-card ${selected ? 'selected' : ''}`}
+                      onClick={() => toggleCharacterSelect(character.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          toggleCharacterSelect(character.id);
+                        }
+                      }}
+                    >
+                      {character.image && <img src={character.image} alt={character.name} />}
+                      <span className="selection">{selected && <Check size={13} />}</span>
+                      <div className="mv-preset-info mv-char-card-body">
+                        <div className="mv-char-card-text">
+                          <strong>{character.name}</strong>
+                          <small className="mv-char-prompt-snippet">
+                            {character.prompt || t('暂未填写提示词，点击右下角编辑')}
+                          </small>
+                        </div>
+                        <button
+                          type="button"
+                          className="small-button mv-char-edit-btn"
+                          onClick={(e) => openEditCharacter(character, e)}
+                        >
+                          <Edit3 size={12} /> {t('编辑')}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="mv-char-empty">
+                <p>{t(charactersLoading ? '正在加载云端人物库…' : '还没有保存的参考人物。上传你的人物图与提示词，即可在多个 MV 中复用。')}</p>
+                {!charactersLoading && (
+                  <div className="speech-actions">
+                    <button type="button" className="small-button save-image" onClick={openAddCharacter}>
+                      <Plus size={13} /> {t('添加人物')}
+                    </button>
+                    <button type="button" className="small-button" onClick={seedStarterCharacters}>
+                      <Sparkles size={13} /> {t('载入示例人物')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </section>
         </fieldset>
 
         <div className="mv-auto-row">
-          <label className="mv-auto-toggle">
-            <input
-              type="checkbox"
-              checked={autoGenerateH3}
-              onChange={(e) => setAutoGenerateH3(e.target.checked)}
-            />
-            <span>{t('脚本逐条输出完成后，全自动生成全部 MiniMax H3 视频')}</span>
-          </label>
-          <button className="submit" type="submit" disabled={busyInput || !audioFile}>
+          <span className="draft-note">
+            <span />
+            {t('先逐条生成「分镜动态提示词」供审阅与朗读检查，确认后再点击「生成全部」启动 MiniMax H3')}
+          </span>
+          <button className="submit" type="submit" disabled={busyInput || (!audioFile && !session?.masterAudioUrl)}>
             {busyInput ? <LoaderCircle className="spin" size={18} /> : <Wand2 size={18} />}
             {t(phase === 'slicing' ? '正在切片音频…' : phase === 'scripting' ? '正在逐条输出脚本…' : '自动切片并生成 MV 脚本')}
           </button>
@@ -861,7 +1377,7 @@ export default function MvStudio() {
                   disabled={busyInput || !allScriptedIndices.length || (videoConfig && !videoConfig.accepted)}
                   onClick={() => startVideoQueue(pendingIndices.length ? pendingIndices : allScriptedIndices)}
                 >
-                  <Video size={14} /> {t(completedVideoEntries.length && pendingIndices.length ? '继续生成剩余 H3 视频' : '全自动生成全部 MiniMax H3 视频')}
+                  <Video size={14} /> {t(completedVideoEntries.length && pendingIndices.length ? '继续生成剩余 H3 视频' : '生成全部')}
                 </button>
               )}
               <button
@@ -906,6 +1422,47 @@ export default function MvStudio() {
             {videoMessage && ` ${t(videoMessage)}`}
           </p>
 
+          {speechItems.length > 0 && (
+            <div className="mv-speech-bar">
+              <div className="speech-actions">
+                <select
+                  aria-label={t('朗读语言')}
+                  value={speechLang}
+                  onChange={(e) => setSpeechLang(e.target.value)}
+                >
+                  {Object.entries(SPEECH_LANGUAGES).map(([id, label]) => (
+                    <option key={id} value={id}>{t(label)}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="small-button"
+                  disabled={!reader.supported || !speechItems.length || busyInput}
+                  onClick={() => reader.play(speechItems, speechLang)}
+                >
+                  <Volume2 size={13} /> {t('▶ 朗读全部脚本')}
+                </button>
+                <button
+                  type="button"
+                  className="small-button"
+                  disabled={!speech.active}
+                  onClick={() => reader.togglePause()}
+                >
+                  {t(speech.paused ? '继续' : '暂停')}
+                </button>
+                <button
+                  type="button"
+                  className="small-button"
+                  disabled={!speech.active}
+                  onClick={() => reader.stop()}
+                >
+                  {t('停止')}
+                </button>
+              </div>
+              {speech.message && <span className="speech-status" role="status">{t(speech.message)}</span>}
+            </div>
+          )}
+
           {story && (
             <div className="mv-story-card">
               <div className="mv-story-badge"><Film size={14} /> {t('AI 导演故事大纲')}</div>
@@ -934,8 +1491,10 @@ export default function MvStudio() {
               const shot = shots[slice.index];
               const job = jobs[slice.index];
               const isQueued = queue.includes(slice.index);
+              const shotSpeechKey = `mv-shot-${slice.index}`;
+              const isSpeaking = speech.key === shotSpeechKey && speech.active;
               return (
-                <article className={`project-article mv-shot-card ${shot ? 'is-ready' : 'is-pending'}`} key={slice.index}>
+                <article className={`project-article mv-shot-card ${shot ? 'is-ready' : 'is-pending'} ${isSpeaking ? 'speaking' : ''}`} key={slice.index}>
                   <div className="dialogue-heading">
                     <h3>
                       {slice.shotId}
@@ -945,6 +1504,24 @@ export default function MvStudio() {
                       {shot?.camera && <span className="mv-tag muted">{shot.camera}</span>}
                     </h3>
                     <div className="speech-actions">
+                      {shot && (
+                        <button
+                          type="button"
+                          className="small-button"
+                          disabled={!reader.supported || !shot.video_prompt?.trim() || busyInput}
+                          onClick={() => {
+                            if (isSpeaking) reader.stop();
+                            else {
+                              reader.play(
+                                [{ key: shotSpeechKey, label: `${slice.shotId} · ${shot.section || slice.section}`, text: shot.video_prompt.trim() }],
+                                speechLang,
+                              );
+                            }
+                          }}
+                        >
+                          {t(isSpeaking ? '■ 停止朗读' : '▶ 朗读脚本')}
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="small-button"

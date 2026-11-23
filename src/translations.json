@@ -2146,5 +2146,165 @@
   "正在等待 AI 逐条输出此切片的分镜脚本…": {
     "en": "Waiting for AI to stream this slice storyboard…",
     "ja": "AI がこの区間の絵コンテを出力するのを待っています…"
+  },
+  "已选参考人物提示词（可直接复制用于外部 AI 生图）": {
+    "en": "Selected reference character prompts (copy for external AI image generation)",
+    "ja": "選択中の参照キャラクタープロンプト（外部AI画像生成用にコピー可能）"
+  },
+  "已复制提示词": {
+    "en": "Prompt copied",
+    "ja": "コピーしました"
+  },
+  "复制提示词": {
+    "en": "Copy prompt",
+    "ja": "プロンプトをコピー"
+  },
+  "先逐条生成「分镜动态提示词」供审阅与朗读检查，确认后再点击「生成全部」启动 MiniMax H3": {
+    "en": "Generates motion storyboard prompts first for review and read-aloud, then click Generate All to run MiniMax H3.",
+    "ja": "まず「動画プロンプト」を順次生成して確認・朗読でき、確認後に「すべて生成」で MiniMax H3 を開始します。"
+  },
+  "生成全部": {
+    "en": "Generate All",
+    "ja": "すべて生成"
+  },
+  "▶ 朗读全部脚本": {
+    "en": "▶ Read All Scripts",
+    "ja": "▶ 脚本をすべて朗読"
+  },
+  "▶ 朗读脚本": {
+    "en": "▶ Read Script",
+    "ja": "▶ 脚本を朗読"
+  },
+  "编辑参考人物": {
+    "en": "Edit Reference Character",
+    "ja": "参照キャラクターを編集"
+  },
+  "添加参考人物": {
+    "en": "Add Reference Character",
+    "ja": "参照キャラクターを追加"
+  },
+  "删除人物": {
+    "en": "Delete Character",
+    "ja": "キャラクターを削除"
+  },
+  "保存人物": {
+    "en": "Save Character",
+    "ja": "キャラクターを保存"
+  },
+  "人物名称": {
+    "en": "Character Name",
+    "ja": "キャラクター名"
+  },
+  "例如：赛博歌姬 Nova": {
+    "en": "e.g., Cyber Vocalist Nova",
+    "ja": "例：サイバー歌姫 Nova"
+  },
+  "人物参考图": {
+    "en": "Character Reference Image",
+    "ja": "キャラクター参照画像"
+  },
+  "更换人物图": {
+    "en": "Replace Image",
+    "ja": "画像を変更"
+  },
+  "上传人物图": {
+    "en": "Upload Image",
+    "ja": "画像をアップロード"
+  },
+  "上传 PNG / JPG / WebP 人物图（10 MB 以内）": {
+    "en": "Upload PNG / JPG / WebP character image (up to 10 MB)",
+    "ja": "PNG / JPG / WebP 人物画像をアップロード（10 MB 以内）"
+  },
+  "人物提示词（生图 / 角色设定描述）": {
+    "en": "Character Prompt (Image / Persona Description)",
+    "ja": "キャラクタープロンプト（画像生成・設定）"
+  },
+  "写下人物的外貌、服装、风格与气质描述，方便复用于生图和分镜脚本…": {
+    "en": "Describe appearance, outfit, style and vibe for reuse across images and storyboards…",
+    "ja": "外見・服装・スタイル・雰囲気を記入（画像生成や絵コンテで再利用）…"
+  },
+  "我的云端 MV 项目": {
+    "en": "My Cloud MV Projects",
+    "ja": "クラウド MV プロジェクト"
+  },
+  "我的 MV 项目": {
+    "en": "My MV Projects",
+    "ja": "マイ MV プロジェクト"
+  },
+  "新建 MV 项目": {
+    "en": "New MV Project",
+    "ja": "新規 MV プロジェクト"
+  },
+  "立即保存": {
+    "en": "Save Now",
+    "ja": "今すぐ保存"
+  },
+  "切片": {
+    "en": "slices",
+    "ja": "区間"
+  },
+  "分镜": {
+    "en": "shots",
+    "ja": "カット"
+  },
+  "视频": {
+    "en": "videos",
+    "ja": "動画"
+  },
+  "删除项目": {
+    "en": "Delete project",
+    "ja": "プロジェクトを削除"
+  },
+  "生成 MV 脚本或编辑内容后，项目会自动保存，刷新页面不会丢失。": {
+    "en": "Projects auto-save once you generate or edit MV content, so refreshing will not lose your work.",
+    "ja": "MV 脚本の生成や編集後に自動保存されるため、ページを更新しても失われません。"
+  },
+  "我的参考人物": {
+    "en": "My Reference Characters",
+    "ja": "マイ参照キャラクター"
+  },
+  "云端保存，点击卡片可多选（最多 4 位）": {
+    "en": "Saved to cloud; click cards to multi-select (up to 4)",
+    "ja": "クラウド保存・カードをクリックして複数選択（最大 4 人）"
+  },
+  "添加人物": {
+    "en": "Add Character",
+    "ja": "キャラクターを追加"
+  },
+  "暂未填写提示词，点击右下角编辑": {
+    "en": "No prompt yet — click Edit in the bottom-right corner",
+    "ja": "プロンプト未記入・右下の「編集」から追加"
+  },
+  "编辑": {
+    "en": "Edit",
+    "ja": "編集"
+  },
+  "正在加载云端人物库…": {
+    "en": "Loading cloud character library…",
+    "ja": "クラウドキャラクターを読み込み中…"
+  },
+  "还没有保存的参考人物。上传你的人物图与提示词，即可在多个 MV 中复用。": {
+    "en": "No saved characters yet. Upload character images and prompts to reuse across your MVs.",
+    "ja": "保存済みキャラクターはまだありません。画像とプロンプトを登録すると複数の MV で再利用できます。"
+  },
+  "载入示例人物": {
+    "en": "Load Starter Characters",
+    "ja": "サンプルを読み込む"
+  },
+  "已恢复保存的 MV 项目": {
+    "en": "Restored saved MV project",
+    "ja": "保存済み MV プロジェクトを復元しました"
+  },
+  "MV 项目已自动保存到云端": {
+    "en": "MV project auto-saved to cloud",
+    "ja": "MV プロジェクトをクラウドに自動保存しました"
+  },
+  "MV 项目已自动保存": {
+    "en": "MV project auto-saved",
+    "ja": "MV プロジェクトを自動保存しました"
+  },
+  "正在保存 MV 项目…": {
+    "en": "Saving MV project…",
+    "ja": "MV プロジェクトを保存中…"
   }
 }

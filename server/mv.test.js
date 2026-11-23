@@ -214,3 +214,83 @@ test('MV router slices MP3, streams storyboard script via SSE, and merges final 
     await rm(folder, { recursive: true, force: true });
   }
 });
+
+test('MV projects and cloud character library persist, edit, list, and delete cleanly', async () => {
+  const { fakeBucket } = await import('./test-support/fake-bucket.js');
+  const { createCloudStore } = await import('./cloud-store.js');
+  const folder = await mkdtemp(path.join(tmpdir(), 'mv-cloud-test-'));
+  const bucket = fakeBucket();
+  const app = express();
+  app.use('/api/mv', mvRouter({ folder, getStore: () => createCloudStore(bucket, 'user-mv-1') }));
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise((r) => server.once('listening', r));
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  try {
+    // 1. Add a character with image + prompt
+    const pngDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2dIAAAAASUVORK5CYII=';
+    const createRes = await fetch(base + '/api/mv/characters', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: '赛博歌姬 Nova', prompt: '银蓝短发，机能风外套', image: pngDataUrl }),
+    });
+    assert.equal(createRes.status, 200);
+    const { character } = await createRes.json();
+    assert.equal(character.name, '赛博歌姬 Nova');
+    assert.equal(character.prompt, '银蓝短发，机能风外套');
+    assert.equal(character.image, pngDataUrl);
+
+    // 2. List characters and edit existing character's prompt without re-uploading image
+    const listChars1 = await (await fetch(base + '/api/mv/characters')).json();
+    assert.equal(listChars1.characters.length, 1);
+    const editRes = await fetch(base + '/api/mv/characters', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: character.id, name: 'Nova 2.0', prompt: '升级版霓虹外套与光环' }),
+    });
+    assert.equal(editRes.status, 200);
+    const edited = (await editRes.json()).character;
+    assert.equal(edited.id, character.id);
+    assert.equal(edited.name, 'Nova 2.0');
+    assert.equal(edited.prompt, '升级版霓虹外套与光环');
+    assert.equal(edited.image, pngDataUrl);
+
+    // 3. Save an MV project, list it, reload it, then delete it
+    const pid = 'mvproj_1234567890abcdef';
+    const saveRes = await fetch(base + '/api/mv/projects/' + pid, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        audioName: 'night-drive.mp3',
+        visualStyle: 'cyberpunk',
+        genre: 'electronic',
+        pace: 5,
+        lrcText: '[00:00.00]Hello neon',
+        selectedCharacterIds: [character.id],
+        story: { title: '霓虹夜航', storyline: '穿梭未来城市' },
+        session: { sessionId: '11111111-1111-1111-1111-111111111111', slices: [{ index: 0, shotId: 'MV-001' }] },
+        shots: { 0: { index: 0, shot_id: 'MV-001', video_prompt: '推进雨夜街道' } },
+      }),
+    });
+    assert.equal(saveRes.status, 200);
+
+    const projectsList = await (await fetch(base + '/api/mv/projects')).json();
+    assert.equal(projectsList.projects.length, 1);
+    assert.equal(projectsList.projects[0].title, '霓虹夜航');
+    assert.equal(projectsList.projects[0].sliceCount, 1);
+    assert.equal(projectsList.projects[0].scriptedCount, 1);
+
+    const loaded = await (await fetch(base + '/api/mv/projects/' + pid)).json();
+    assert.equal(loaded.story.title, '霓虹夜航');
+    assert.deepEqual(loaded.selectedCharacterIds, [character.id]);
+
+    // 4. Delete both project and character
+    assert.equal((await fetch(base + '/api/mv/projects/' + pid, { method: 'DELETE' })).status, 200);
+    assert.equal((await fetch(base + '/api/mv/characters/' + character.id, { method: 'DELETE' })).status, 200);
+    assert.equal((await (await fetch(base + '/api/mv/projects')).json()).projects.length, 0);
+    assert.equal((await (await fetch(base + '/api/mv/characters')).json()).characters.length, 0);
+  } finally {
+    await new Promise((r) => server.close(r));
+    await rm(folder, { recursive: true, force: true });
+  }
+});
