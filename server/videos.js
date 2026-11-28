@@ -18,7 +18,17 @@ const errors={agreement_required:'请先在 ai& 控制台 Playground 接受视�
 export async function aiRequest(route,options={}){
  if(!process.env.AIAND_API_KEY)throw Object.assign(new Error('后端未配置 AIAND_API_KEY。'),{httpStatus:401});
  const res=await fetch('https://api.aiand.com/v1/'+route,{...options,headers:{Authorization:'Bearer '+process.env.AIAND_API_KEY,...options.headers},signal:AbortSignal.timeout(route.endsWith('/content')?180000:60000)});
- if(!res.ok){let e={};try{e=await res.json();}catch{}const code=e.error?.code||e.code;throw Object.assign(new Error(errors[code]||`ai& 请求失败（${res.status}${code?' / '+code:''}）。`),{httpStatus:res.status});}
+ if(!res.ok){
+  const data=await res.json().catch(()=>null);
+  const error=data?.error??data;
+  const code=error?.code||data?.code;
+  let message=errors[code]||`ai& 请求失败（${res.status}${code?' / '+code:''}）。`;
+  if(code==='invalid_value'){
+   if(typeof error.param==='string'&&error.param.trim())message+=` 参数：${error.param.trim().slice(0,120)}。`;
+   if(typeof error.message==='string'&&error.message.trim())message+=' '+error.message.replace(/\s+/g,' ').trim().slice(0,500);
+  }
+  throw Object.assign(new Error(message),{httpStatus:res.status});
+ }
  return res;
 }
 function decodeMedia(value,type){
@@ -53,11 +63,32 @@ export async function inspectAudio(value){
   return await decodedAudioDuration(file);
  }finally{await rm(folder,{recursive:true,force:true});}
 }
-export function createVideoService(request=aiRequest,folder=directory,{audioInspector=inspectAudio,muxer=lockNarration,store,preflight=()=>mediaTool(process.env.FFMPEG_BIN||'ffmpeg',['-version'])}={}){
+async function prepareAudioReference(source){
+ const folder=await mkdtemp(path.join(tmpdir(),'director-audio-reference-'));
+ const output=path.join(folder,'reference.wav');
+ try{
+  // MP3 packet padding can exceed the shot limit even when the decoded speech fits.
+  // PCM has an exact sample count. Add silence for clips under ai&'s two-second minimum.
+  await mediaTool(process.env.FFMPEG_BIN||'ffmpeg',[
+   '-v','error','-i',source,'-map','0:a:0','-af','apad=whole_dur=2',
+   '-ar','48000','-ac','1','-c:a','pcm_s16le','-map_metadata','-1',output,
+  ]);
+  return await readFile(output);
+ }finally{await rm(folder,{recursive:true,force:true});}
+}
+export function createVideoService(request=aiRequest,folder=directory,{audioInspector=inspectAudio,audioReference=prepareAudioReference,muxer=lockNarration,store,preflight=()=>mediaTool(process.env.FFMPEG_BIN||'ffmpeg',['-version'])}={}){
  const locks=new Map();
  async function save(job){if(store)return store.write('videos/'+job.id+'.json',job);await mkdir(folder,{recursive:true});const dest=path.join(folder,job.id+'.json'),tmp=dest+'.tmp';await writeFile(tmp,JSON.stringify(job));await rename(tmp,dest);}
  async function load(id){if(store)return store.read('videos/'+id+'.json');try{return JSON.parse(await readFile(path.join(folder,id+'.json'),'utf8'));}catch{return null;}}
- async function upload(value,type){const {bytes,mime}=decodeMedia(value,type),form=new FormData();form.append('purpose',type==='image'?'vision':'audio');form.append('file',new Blob([bytes],{type:mime}),type==='image'?'reference.'+(mime.endsWith('jpeg')?'jpg':mime.split('/')[1]):'voice.mp3');const result=await(await request('files',{method:'POST',body:form})).json();if(!result.id)throw new Error('ai& 未返回素材 ID。');return result.id;}
+ async function upload({bytes,mime},purpose,filename){
+  const form=new FormData();
+  form.append('purpose',purpose);
+  form.append('file',new Blob([bytes],{type:mime}),filename);
+  const result=await(await request('files',{method:'POST',body:form})).json();
+  if(!result.id)throw new Error('ai& 未返回素材 ID。');
+  return result.id;
+ }
+ function uploadImage(media){return upload(media,'vision','reference.'+(media.mime.endsWith('jpeg')?'jpg':media.mime.split('/')[1]));}
  async function submit(body){
   validateVideo(body);const id=body.requestId;
   if(locks.has(id))return locks.get(id);
@@ -69,19 +100,36 @@ export function createVideoService(request=aiRequest,folder=directory,{audioInsp
    let posting=false;
    try{
     const duration=await audioInspector(body.audio);
-    if(duration>body.seconds+0.02)throw new Error(`配音长 ${duration.toFixed(2)} 秒，超过镜头 ${body.seconds} 秒。请延长镜头或拆分台词，避免被截断。`);
+    if(Math.round(duration*1000)>body.seconds*1000)throw new Error(`配音长 ${duration.toFixed(3)} 秒，超过镜头 ${body.seconds} 秒。请延长镜头或拆分台词，避免被截断。`);
     await preflight();
-    await writeFile(path.join(folder,id+'.narration.mp3'),decodeMedia(body.audio,'audio').bytes);
-    job.narrationFile=id+'.narration.mp3';if(store)await store.upload('videos/'+job.narrationFile,path.join(folder,job.narrationFile),'audio/mpeg');job.pipelineVersion='voice-image-v2';
+    const narration=decodeMedia(body.audio,'audio');
+    job.narrationFile=id+'.narration.mp3';
+    const narrationPath=path.join(folder,job.narrationFile);
+    await writeFile(narrationPath,narration.bytes);
+    const referenceBytes=await audioReference(narrationPath);
+    if(store)await store.upload('videos/'+job.narrationFile,narrationPath,narration.mime);
+    job.pipelineVersion='voice-image-v3';
     if(body.continuity)job.continuity={...body.continuity};
     job.audioDuration=duration;job.referenceKey=body.referenceKey;job.referenceNames=body.characters.map(c=>c.name);
     const payload={model:MODEL,prompt:videoPrompt(body),seconds:body.seconds,aspect_ratio:body.aspect};
     const images=[];const manifest=[];
-    const hash=value=>createHash('sha256').update(decodeMedia(value,'image').bytes).digest('hex');
-    for(const [index,character] of body.characters.entries()){if(store)await store.bytes(`videos/${id}.reference-${index}.image`,decodeMedia(character.image,'image').bytes,decodeMedia(character.image,'image').mime);const file_id=await upload(character.image,'image');images.push({file_id});manifest.push({character_id:character.character_id,name:character.name,file_id,sha256:hash(character.image)});}
-    if(body.image){if(store)await store.bytes(`videos/${id}.scene.image`,decodeMedia(body.image,'image').bytes,decodeMedia(body.image,'image').mime);const file_id=await upload(body.image,'image');images.push({file_id});manifest.push({name:body.continuity?'上一镜头尾帧':'场景参考',file_id,sha256:hash(body.image)});}
-    payload.references={images,audio:[{file_id:await upload(body.audio,'audio')}]};
-    job.submittedRequest=payload;job.inputManifest={images:manifest,...(job.continuity?{continuity:job.continuity}:{}),audio:{file_id:payload.references.audio[0].file_id,sha256:createHash('sha256').update(decodeMedia(body.audio,'audio').bytes).digest('hex')}};
+    const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
+    for(const [index,character] of body.characters.entries()){
+     const image=decodeMedia(character.image,'image');
+     if(store)await store.bytes(`videos/${id}.reference-${index}.image`,image.bytes,image.mime);
+     const file_id=await uploadImage(image);
+     images.push({file_id});manifest.push({character_id:character.character_id,name:character.name,file_id,sha256:hash(image.bytes)});
+    }
+    if(body.image){
+     const image=decodeMedia(body.image,'image');
+     if(store)await store.bytes(`videos/${id}.scene.image`,image.bytes,image.mime);
+     const file_id=await uploadImage(image);
+     images.push({file_id});manifest.push({name:body.continuity?'上一镜头尾帧':'场景参考',file_id,sha256:hash(image.bytes)});
+    }
+    const audioId=await upload({bytes:referenceBytes,mime:'audio/wav'},'audio','voice-reference.wav');
+    payload.references={images,audio:[{file_id:audioId}]};
+    job.submittedRequest=payload;
+    job.inputManifest={images:manifest,...(job.continuity?{continuity:job.continuity}:{}),audio:{file_id:audioId,mime:'audio/wav',sha256:hash(referenceBytes),source_sha256:hash(narration.bytes)}};
     await save(job);
     posting=true;
     const result=await(await request('videos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})).json();

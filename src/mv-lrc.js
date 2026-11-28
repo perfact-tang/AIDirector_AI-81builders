@@ -22,6 +22,33 @@ export function formatClock(totalSeconds) {
   return `${m}:${s}`;
 }
 
+function parseShotClock(value) {
+  const match = /^(\d{1,3}):([0-5]\d)(?:\.(\d{1,3}))?$/.exec(value?.trim());
+  if (!match) return undefined;
+  const [, minutes, seconds, fraction = '0'] = match;
+  return Number(minutes) * 60 + Number(seconds) + Number(`0.${fraction}`);
+}
+
+export function formatVoiceLrc(shots) {
+  const lines = [];
+  let nextStart = 0;
+
+  for (const { timestamp, seconds, text } of shots) {
+    const [startClock, endClock] = (timestamp ?? '').split(/[-–—]/);
+    const start = parseShotClock(startClock) ?? nextStart;
+    const end = parseShotClock(endClock);
+    const duration = Number.isFinite(seconds) && seconds > 0 ? seconds : 5;
+    nextStart = end > start ? end : start + duration;
+
+    if (!text) continue;
+    const centiseconds = Math.round(start * 100);
+    const fraction = String(centiseconds % 100).padStart(2, '0');
+    lines.push(`[${formatClock(centiseconds / 100)}.${fraction}]${text.replace(/\s*[\r\n]+\s*/g, ' ')}`);
+  }
+
+  return lines.length ? `${lines.join('\n')}\n` : '';
+}
+
 export function parseLrc(rawText = '') {
   const meta = { title: '', artist: '', album: '' };
   const lines = [];

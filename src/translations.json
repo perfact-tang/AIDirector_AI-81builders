@@ -771,6 +771,10 @@
     "en": "Download generated voiceovers (ZIP)",
     "ja": "生成済み音声をダウンロード（ZIP）"
   },
+  "下载 LRC": {
+    "en": "Download LRC",
+    "ja": "LRC をダウンロード"
+  },
   "Edge TTS 将台词发送至 Microsoft 在线语音服务。生成音频不自动匹配镜头时长。": {
     "en": "Edge TTS sends dialogue to Microsoft's online speech service. Audio is not automatically fitted to shot duration.",
     "ja": "Edge TTS は台詞を Microsoft のオンライン音声サービスに送信します。音声の長さはカットの長さに自動調整されません。"
@@ -1306,6 +1310,14 @@
   "ai& 请求失败（{0}{1}）。": {
     "en": "ai& request failed ({0}{1}).",
     "ja": "ai& へのリクエストに失敗しました（{0}{1}）。"
+  },
+  "ai& 请求失败（{0} / invalid_value）。 参数：{1}。{2}": {
+    "en": "ai& request failed ({0} / invalid_value). Field: {1}.{2}",
+    "ja": "ai& へのリクエストに失敗しました（{0} / invalid_value）。項目：{1}。{2}"
+  },
+  "ai& 请求失败（{0} / invalid_value）。 {1}": {
+    "en": "ai& request failed ({0} / invalid_value). {1}",
+    "ja": "ai& へのリクエストに失敗しました（{0} / invalid_value）。{1}"
   },
   "参考素材格式无效。": {
     "en": "Invalid reference media format.",

@@ -8,7 +8,7 @@ import { VISUAL_STYLES, VISUAL_STYLE_IDS } from '../src/visual-styles.js';
 import { briefText } from './director.js';
 import { validateAppProject } from '../src/project-contract.js';
 import { compileVideoPrompt } from '../src/compiled-video-prompt.js';
-import { parseLrc, buildMvSlices } from '../src/mv-lrc.js';
+import { parseLrc, buildMvSlices, formatVoiceLrc } from '../src/mv-lrc.js';
 import { mvRouter, extractJsonObjects } from './mv.js';
 import { mediaTool, decodedAudioDuration } from './media-tools.js';
 
@@ -59,6 +59,18 @@ test('compileVideoPrompt prevents tail-frame freeze and supports music MV audio 
   assert.match(cont, /仅作为本镜头 0\.00 秒起始衔接参考/);
   assert.match(cont, /禁止停留在上一帧静止画面/);
   assert.match(cont, /音乐 MV 的原曲切片/);
+});
+
+test('voice LRC exports current dialogue on the storyboard timeline', () => {
+  const lrc = formatVoiceLrc([
+    { timestamp: '00:00 - 00:05', seconds: 5, text: '编辑后的台词。\r\nこんにちは。' },
+    { timestamp: '00:05 – 00:12.50', seconds: 7, text: '' },
+    { seconds: 4, text: '下一段。' },
+    { timestamp: '01:00.25 - 01:05', seconds: 5, text: 'Final line.' },
+  ]);
+  assert.equal(lrc, '[00:00.00]编辑后的台词。 こんにちは。\n[00:12.50]下一段。\n[01:00.25]Final line.\n');
+  assert.deepEqual(parseLrc(lrc).lines.map(({ time }) => time), [0, 12.5, 60.25]);
+  assert.equal(formatVoiceLrc([{ timestamp: '00:00 - 00:05', text: '' }]), '');
 });
 
 test('parseLrc and buildMvSlices align timestamped lyrics to 5s and 10s slices', () => {

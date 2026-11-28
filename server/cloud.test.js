@@ -20,7 +20,7 @@ test('Storage project and character images survive reload and are isolated by Fi
 test('Cloud video completion survives losing all local files without generating again',async()=>{
  const bucket=fakeBucket(),store=createCloudStore(bucket,'alice'),folder=await mkdtemp(path.join(tmpdir(),'cloud-video-'));let creates=0;
  const request=async(route,options={})=>route==='files'?Response.json({id:'file_test'}):route==='videos'?(creates++,Response.json({id:'video_cloudtest',status:'queued'})):route.endsWith('/content')?new Response('fixture-mp4'):Response.json({status:'completed'});
- const options={store,audioInspector:async()=>2,preflight:async()=>{},muxer:async(raw,audio,out)=>{await copyFile(raw,out);return {audioLocked:true};}};
+ const options={store,audioInspector:async()=>2,audioReference:async()=>Buffer.from('wav'),preflight:async()=>{},muxer:async(raw,audio,out)=>{await copyFile(raw,out);return {audioLocked:true};}};
  try{
   const input={requestId:'cloud-video-123456',prompt:'人物行动',firstPrompt:'场景',seconds:5,aspect:'16:9',characters:[{name:'角色',image}],audio:'data:audio/mpeg;base64,aGk=',referenceKey:'ref'};
   await createVideoService(request,folder,options).submit(input);await rm(folder,{recursive:true,force:true});
