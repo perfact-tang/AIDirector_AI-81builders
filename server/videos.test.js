@@ -16,7 +16,7 @@ test('video generation requires narration and an image anchor; prompt prioritize
 });
 test('video submit is idempotent, polls completion, caches MP4, survives service restart',async()=>{
  const folder=await mkdtemp(path.join(tmpdir(),'video-test-'));let posts=0,polls=0;
- const request=async(route,options={})=>{if(route==='files')return json({id:'file_'+options.body.get('purpose')});if(route==='videos'){posts++;await new Promise(r=>setTimeout(r,5));const body=JSON.parse(options.body);assert.equal(body.model,'minimaxai/minimax-h3-fast');assert.equal(body.seconds,5);return json({id:'video_mock123',status:'queued',cost:'50',currency:'jpy'});}if(route.endsWith('/content'))return new Response(Buffer.from('mp4-test'));polls++;return json({status:'completed'});};
+ const request=async(route,options={})=>{if(route==='files')return json({id:'file_'+options.body.get('purpose')});if(route==='videos'){posts++;await new Promise(r=>setTimeout(r,5));const body=JSON.parse(options.body);assert.equal(body.model,'minimaxai/minimax-h3-fast');assert.equal(body.seconds,5);return json({id:'video_mock123',status:'queued',cost:'10',currency:'jpy'});}if(route.endsWith('/content'))return new Response(Buffer.from('mp4-test'));polls++;return json({status:'completed'});};
  try{
   const service=createVideoService(request,folder,options);const [a,b]=await Promise.all([service.submit(input),service.submit(input)]);assert.equal(posts,1);assert.equal(a.id,b.id);assert.equal(a.audioDuration,3);assert.deepEqual(a.referenceNames,['小明']);
   const fresh=createVideoService(request,folder,options);const done=await fresh.get(a.id);assert.equal(done.status,'completed');assert.ok(done.url);assert.equal((await readFile(path.join(folder,a.id+'.mp4'))).toString(),'mp4-test');await fresh.get(a.id);assert.equal(polls,1);await fresh.submit(input);assert.equal(posts,1);
@@ -31,7 +31,7 @@ test('audio longer than the shot fails before uploading or creating a billed job
  const folder=await mkdtemp(path.join(tmpdir(),'video-duration-'));let calls=0;
  try{const service=createVideoService(async()=>{calls++;},folder,{audioInspector:async()=>5.01});const job=await service.submit(input);assert.equal(job.status,'failed');assert.match(job.error,/超过镜头 5 秒/);assert.equal(calls,0);}finally{await rm(folder,{recursive:true,force:true});}
 });
-test('Fast uploads a PCM reference with a valid whole-file duration and retains the original MP3',async t=>{
+test('H3 Fast uploads a PCM reference with a valid whole-file duration and retains the original MP3',async t=>{
  try{await mediaTool('ffmpeg',['-version']);await mediaTool('ffprobe',['-version']);}catch{t.skip('FFmpeg or ffprobe not installed');return;}
  const folder=await mkdtemp(path.join(tmpdir(),'video-wav-reference-'));
  t.after(()=>rm(folder,{recursive:true,force:true}));
@@ -65,6 +65,61 @@ test('Fast uploads a PCM reference with a valid whole-file duration and retains 
   assert.equal(job.inputManifest.audio.source_sha256,hash(original));
   assert.deepEqual(await readFile(path.join(folder,job.narrationFile)),original);
  }
+});
+test('video config offers available MV models and keeps Fast as the default',async()=>{
+ const pricing=[{resolution:'768p',per_second:'2.000000',currency:'jpy'}];
+ const fast={id:'minimaxai/minimax-h3-fast',input_modes:['text','frames','references'],pricing};
+ const quality={...fast,id:'minimaxai/minimax-h3',pricing:[{...pricing[0],per_second:'9.000000'}]};
+ let models=[quality];
+ const service=createVideoService(async route=>{
+  if(route==='videos/acceptance')return json({accepted:true});
+  assert.equal(route,'videos/models');
+  return json({data:models});
+ });
+ await assert.rejects(service.config(),/未提供 MiniMax H3 Fast/);
+ assert.deepEqual(await service.config({includeChoices:true}),{
+  accepted:true,defaultModel:fast.id,choices:[
+   {id:fast.id,label:'MiniMax H3 Fast',requiresConfirmation:false,rate:undefined,error:'ai& 当前未提供 MiniMax H3 Fast。'},
+   {id:quality.id,label:'MiniMax H3 Quality',requiresConfirmation:true,rate:quality.pricing[0],error:undefined},
+  ],
+ });
+ models=[quality,{...fast,input_modes:['text','frames']}];
+ await assert.rejects(service.config(),/暂不支持音频和图片参考/);
+ models=[quality,{...fast,pricing:[]}];
+ await assert.rejects(service.config(),/未提供所选视频模型的 768p 报价/);
+ models=[quality,fast];
+ assert.deepEqual(await service.config(),{accepted:true,model:fast.id,pricing});
+});
+test('Quality submits only after confirmation at the current price',async t=>{
+ const folder=await mkdtemp(path.join(tmpdir(),'video-quality-confirmed-'));
+ t.after(()=>rm(folder,{recursive:true,force:true}));
+ const model='minimaxai/minimax-h3';
+ const confirmedRate={resolution:'768p',per_second:'9.000000',currency:'jpy'};
+ let rate={...confirmedRate,per_second:'12.000000'};
+ const calls=[];
+ const service=createVideoService(async(route,options)=>{
+  calls.push(route);
+  if(route==='videos/models')return json({data:[{id:model,input_modes:['references'],pricing:[rate]}]});
+  if(route==='files')return json({id:'file_'+options.body.get('purpose')});
+  assert.equal(route,'videos');
+  assert.equal(JSON.parse(options.body).model,model);
+  return json({id:'video_quality',status:'queued',cost:'45',currency:'jpy'});
+ },folder,options);
+ await assert.rejects(service.submit({...input,model}),/先确认 MiniMax H3 Quality 的报价/);
+ assert.deepEqual(calls,[]);
+ const stale=await service.submit({...input,model,confirmedRate});
+ assert.equal(stale.status,'failed');
+ assert.equal(stale.errorCode,'video_quote_changed');
+ assert.deepEqual(calls,['videos/models']);
+ rate=confirmedRate;
+ const confirmed={...input,requestId:'test-confirmed-quality-job',model,confirmedRate,characters:[{name:'小明',image,character_id:'CHAR-001'}],characterRefs:['CHAR-001']};
+ const job=await service.submit(confirmed);
+ assert.equal(job.status,'queued');
+ assert.equal(job.model,model);
+ assert.equal(job.cost,'45');
+ assert.deepEqual(calls,['videos/models','videos/models','files','files','videos']);
+ assert.deepEqual(await service.submit(confirmed),job);
+ assert.equal(calls.length,5);
 });
 test('ai& validation errors preserve the field and provider explanation',async t=>{
  const oldKey=process.env.AIAND_API_KEY;

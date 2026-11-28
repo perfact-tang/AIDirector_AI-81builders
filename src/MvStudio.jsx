@@ -153,6 +153,9 @@ export default function MvStudio() {
 
   // MiniMax H3 video generation state
   const [videoConfig, setVideoConfig] = useState(null);
+  const [videoConfigError, setVideoConfigError] = useState('');
+  const [videoModel, setVideoModel] = useState('');
+  const [videoConfirmation, setVideoConfirmation] = useState(null);
   const [jobs, setJobs] = useState({});
   const [queue, setQueue] = useState([]);
   const [videoBusy, setVideoBusy] = useState(false);
@@ -219,6 +222,7 @@ export default function MvStudio() {
     setJobs(data.jobs || {});
     jobsRef.current = data.jobs || {};
     setMergedUrl(data.mergedUrl || '');
+    setVideoConfirmation(null);
     setQueue([]);
     setVideoBusy(false);
     setError('');
@@ -268,6 +272,7 @@ export default function MvStudio() {
     shotsRef.current = {};
     setJobs({});
     jobsRef.current = {};
+    setVideoConfirmation(null);
     setQueue([]);
     setVideoBusy(false);
     setMergedUrl('');
@@ -292,12 +297,12 @@ export default function MvStudio() {
 
   // Initial mount: load video config, saved MV projects, saved characters, and restore active MV project
   async function loadVideoConfig() {
+    setVideoConfig(null);
+    setVideoConfigError('');
     try {
-      const res = await fetch('/api/videos/config');
-      const data = await res.json();
-      if (res.ok) setVideoConfig(data);
-    } catch {
-      // Ignore offline config fetch error until submission
+      setVideoConfig(await apiJson('/api/videos/config?choices=1'));
+    } catch (err) {
+      setVideoConfigError(err.message);
     }
   }
 
@@ -616,14 +621,27 @@ export default function MvStudio() {
     setVideoMessage('已停止后续生成。已提交的动画仍会继续处理，结果将自动保留。');
   }
 
-  async function startVideoQueue(indices, overrideSession, overrideShots) {
-    const activeSession = overrideSession || sessionRef.current;
-    const activeShots = overrideShots || shotsRef.current;
-    if (!activeSession?.slices?.length || !indices.length) return;
-    if (videoConfig && !videoConfig.accepted) {
-      setVideoMessage('请先在 ai& 控制台 Playground 接受视频服务条款后再生成动画。');
+  function formatVideoCost(amount, currency) {
+    const unit = currency.toLowerCase() === 'jpy' ? t('日元') : currency.toUpperCase();
+    return `${Number(Number(amount).toFixed(6))} ${unit}`;
+  }
+
+  function requestVideoGeneration(indices) {
+    if (!canGenerateVideo || videoBusy || !indices.length) return;
+    const seconds = indices.reduce((total, index) => total + slices[index].duration, 0);
+    const generation = { indices, seconds, model: selectedVideoModel, sessionId: sessionRef.current?.sessionId };
+    if (generation.model.requiresConfirmation) {
+      setVideoConfirmation(generation);
       return;
     }
+    startVideoQueue(generation);
+  }
+
+  async function startVideoQueue(generation) {
+    const { indices, model, sessionId } = generation;
+    const activeSession = sessionRef.current;
+    const activeShots = shotsRef.current;
+    if (!activeSession?.slices?.length || activeSession.sessionId !== sessionId || videoBusy) return;
 
     videoAbortRef.current?.abort();
     const controller = new AbortController();
@@ -683,6 +701,8 @@ export default function MvStudio() {
 
           const body = {
             requestId,
+            model: model.id,
+            ...(model.requiresConfirmation ? { confirmedRate: model.rate } : {}),
             shotId: slice.shotId,
             revision: 'mv-auto',
             audioMode: 'music',
@@ -723,6 +743,11 @@ export default function MvStudio() {
           if (!controller.signal.aborted) {
             setJobs((prev) => ({ ...prev, [idx]: job }));
             setQueue((prev) => prev.filter((item) => item !== idx));
+            if (job.errorCode === 'video_quote_changed') {
+              setVideoMessage(job.error);
+              void loadVideoConfig();
+              return;
+            }
           }
         } catch (shotErr) {
           if (controller.signal.aborted || shotErr.name === 'AbortError') break;
@@ -870,6 +895,8 @@ export default function MvStudio() {
     .map((s) => s.index)
     .filter((i) => shots[i] && !(jobs[i]?.status === 'completed' && jobs[i]?.url));
   const allScriptedIndices = slices.map((s) => s.index).filter((i) => Boolean(shots[i]));
+  const batchVideoIndices = pendingIndices.length ? pendingIndices : allScriptedIndices;
+  const batchVideoSeconds = batchVideoIndices.reduce((total, index) => total + slices[index].duration, 0);
   const speechItems = slices
     .filter((s) => shots[s.index]?.video_prompt?.trim())
     .map((s) => ({
@@ -877,7 +904,12 @@ export default function MvStudio() {
       label: `${s.shotId} · ${shots[s.index].section || s.section}`,
       text: shots[s.index].video_prompt.trim(),
     }));
-  const price = videoConfig?.pricing?.find((p) => p.resolution === '768p');
+  const selectedVideoModel = videoConfig?.choices?.find((choice) => choice.id === (videoModel || videoConfig.defaultModel));
+  const price = selectedVideoModel?.rate;
+  const canGenerateVideo = Boolean(videoConfig?.accepted && price);
+  const videoServiceMessage = videoConfigError || (videoConfig && !videoConfig.accepted
+    ? '请先在 ai& 控制台 Playground 接受视频服务条款。'
+    : selectedVideoModel?.error);
 
   async function handleMergeMv() {
     if (!session?.sessionId || !completedVideoEntries.length) return;
@@ -939,6 +971,26 @@ export default function MvStudio() {
   return (
     <div className="mv-studio">
       {playlist && <MediaPlaylist items={playlist} type="video" onClose={() => setPlaylist(null)} />}
+      {videoConfirmation && (
+        <Modal
+          title={t('确认使用高价模型？')}
+          onCancel={() => setVideoConfirmation(null)}
+          footer={<>
+            <button type="button" className="small-button" autoFocus onClick={() => setVideoConfirmation(null)}>{t('取消')}</button>
+            <button type="button" className="small-button save-image" onClick={() => {
+              setVideoConfirmation(null);
+              startVideoQueue(videoConfirmation);
+            }}>{t('确认并生成')}</button>
+          </>}
+        >
+          <p className="generation-summary">
+            {t(`${videoConfirmation.model.label} 是高价档，单价 ${formatVideoCost(videoConfirmation.model.rate.per_second, videoConfirmation.model.rate.currency)} / 秒。`)}
+          </p>
+          <p className="generation-note">
+            {t(`本次生成 ${videoConfirmation.indices.length} 段，共 ${videoConfirmation.seconds} 秒，预计 ${formatVideoCost(videoConfirmation.seconds * Number(videoConfirmation.model.rate.per_second), videoConfirmation.model.rate.currency)}。`)}
+          </p>
+        </Modal>
+      )}
 
       {/* Add / Edit Character Modal */}
       {charModal && (
@@ -1366,6 +1418,22 @@ export default function MvStudio() {
               </p>
             </div>
             <div className="speech-actions">
+              {videoConfig?.choices && (
+                <label className="mv-video-model">
+                  <span>{t('视频模型')}</span>
+                  <select
+                    value={selectedVideoModel?.id || videoConfig.defaultModel}
+                    disabled={videoBusy}
+                    onChange={(event) => setVideoModel(event.target.value)}
+                  >
+                    {videoConfig.choices.map((choice) => (
+                      <option key={choice.id} value={choice.id}>
+                        {choice.label}{choice.rate ? '' : ` · ${t('暂不可用')}`}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               {videoBusy ? (
                 <button type="button" className="small-button generation-stop" onClick={stopVideoGeneration}>
                   <Square size={13} /> {t('停止 H3 生成')}
@@ -1374,8 +1442,8 @@ export default function MvStudio() {
                 <button
                   type="button"
                   className="small-button save-image"
-                  disabled={busyInput || !allScriptedIndices.length || (videoConfig && !videoConfig.accepted)}
-                  onClick={() => startVideoQueue(pendingIndices.length ? pendingIndices : allScriptedIndices)}
+                  disabled={busyInput || !allScriptedIndices.length || !canGenerateVideo}
+                  onClick={() => requestVideoGeneration(batchVideoIndices)}
                 >
                   <Video size={14} /> {t(completedVideoEntries.length && pendingIndices.length ? '继续生成剩余 H3 视频' : '生成全部')}
                 </button>
@@ -1407,16 +1475,16 @@ export default function MvStudio() {
             </div>
           </div>
 
-          {videoConfig && !videoConfig.accepted && (
+          {videoServiceMessage && (
             <p className="tts-error" role="alert">
-              {t('请先在 ai& 控制台 Playground 接受视频服务条款，然后')}
-              <button type="button" className="small-button" onClick={loadVideoConfig}>{t('重新检查权限')}</button>
+              {t(videoServiceMessage)}{' '}
+              <button type="button" className="small-button" onClick={loadVideoConfig}>{t('重新检查视频服务')}</button>
             </p>
           )}
 
           <p className="tts-note">
             {price
-              ? `${t('MiniMax H3 报价')} ${price.per_second} ${price.currency} / ${t('秒')} · ${t('共')} ${slices.length} ${t('个切片')}（${slices.length * pace}s），${t('预计')} ${(slices.length * pace * Number(price.per_second)).toFixed(2)} ${price.currency}。`
+              ? `${selectedVideoModel.label} · ${formatVideoCost(price.per_second, price.currency)} / ${t('秒')}${batchVideoSeconds ? ` · ${t('预计')} ${formatVideoCost(batchVideoSeconds * Number(price.per_second), price.currency)}` : ''}`
               : t('MiniMax H3 · 768p · 原曲切片音频驱动')}
             {videoBusy && ` ${t('队列剩余')} ${queue.length} ${t('条')}。`}
             {videoMessage && ` ${t(videoMessage)}`}
@@ -1525,8 +1593,8 @@ export default function MvStudio() {
                       <button
                         type="button"
                         className="small-button"
-                        disabled={videoBusy || !shot || (videoConfig && !videoConfig.accepted)}
-                        onClick={() => startVideoQueue([slice.index])}
+                        disabled={videoBusy || busyInput || !shot || !canGenerateVideo}
+                        onClick={() => requestVideoGeneration([slice.index])}
                       >
                         {t(job?.url ? '重新生成 H3' : '生成本段 H3')}
                       </button>

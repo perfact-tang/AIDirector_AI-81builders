@@ -12,9 +12,25 @@ import {compileVideoPrompt} from '../src/compiled-video-prompt.js';
 import {lockNarration,mediaTool,decodedAudioDuration} from './media-tools.js';
 import {tmpdir} from 'node:os';
 const directory=fileURLToPath(new URL('../.local/videos/',import.meta.url));
-const MODEL='minimaxai/minimax-h3-fast';
+const FAST_MODEL='minimaxai/minimax-h3-fast';
+const QUALITY_MODEL='minimaxai/minimax-h3';
+const modelChoices=[
+ {id:FAST_MODEL,label:'MiniMax H3 Fast',requiresConfirmation:false},
+ {id:QUALITY_MODEL,label:'MiniMax H3 Quality',requiresConfirmation:true},
+];
 const aspects=['Auto','21:9','16:9','4:3','1:1','3:4','9:16'];
-const errors={agreement_required:'请先在 ai& 控制台 Playground 接受视频服务条款。',insufficient_credits:'ai& 余额不足。',monthly_budget_reached:'ai& 月度预算不足。',concurrency_limit_exceeded:'ai& 同时生成数量已达上限，请等待现有任务完成。',rate_limit_exceeded:'ai& 提交过于频繁，请稍后重试。',moderation_blocked:'提示词或参考素材未通过内容审核，请修改后重试。',provider_unavailable:'视频服务暂不可用。',model_not_found:'当前账户无法使用 MiniMax H3。'};
+const errors={agreement_required:'请先在 ai& 控制台 Playground 接受视频服务条款。',insufficient_credits:'ai& 余额不足。',monthly_budget_reached:'ai& 月度预算不足。',concurrency_limit_exceeded:'ai& 同时生成数量已达上限，请等待现有任务完成。',rate_limit_exceeded:'ai& 提交过于频繁，请稍后重试。',moderation_blocked:'提示词或参考素材未通过内容审核，请修改后重试。',provider_unavailable:'视频服务暂不可用。',model_not_found:'ai& 当前未提供所选的 MiniMax H3 型号。',model_access_denied:'ai& 当前组织没有所选 MiniMax H3 型号的使用权限。'};
+function validRate(rate){
+ return typeof rate?.per_second==='string'&&/^\d+(?:\.\d+)?$/.test(rate.per_second)&&Number.isFinite(Number(rate.per_second))&&typeof rate.currency==='string'&&/^[a-z]{3}$/i.test(rate.currency);
+}
+function modelAvailability(catalog,id){
+ const model=catalog.find(item=>item.id===id);
+ if(!model)return {error:id===FAST_MODEL?'ai& 当前未提供 MiniMax H3 Fast。':'ai& 当前未提供 MiniMax H3 Quality。'};
+ if(!model.input_modes?.includes('references'))return {error:'所选视频模型暂不支持音频和图片参考。'};
+ const rate=model.pricing?.find(price=>price.resolution==='768p'&&validRate(price));
+ if(!rate)return {error:'ai& 当前未提供所选视频模型的 768p 报价。'};
+ return {rate,pricing:model.pricing};
+}
 export async function aiRequest(route,options={}){
  if(!process.env.AIAND_API_KEY)throw Object.assign(new Error('后端未配置 AIAND_API_KEY。'),{httpStatus:401});
  const res=await fetch('https://api.aiand.com/v1/'+route,{...options,headers:{Authorization:'Bearer '+process.env.AIAND_API_KEY,...options.headers},signal:AbortSignal.timeout(route.endsWith('/content')?180000:60000)});
@@ -39,6 +55,8 @@ function decodeMedia(value,type){
 }
 export function validateVideo(b){
  if(!b||!/^[-a-zA-Z0-9_]{16,80}$/.test(b.requestId??'')||typeof b.prompt!=='string'||!b.prompt.trim()||b.prompt.length>6000||typeof b.firstPrompt!=='string'||b.firstPrompt.length>800||!Number.isInteger(b.seconds)||b.seconds<4||b.seconds>15||!aspects.includes(b.aspect))throw new Error('请检查提示词、首帧提示词、时长（4–15 秒）与画幅。');
+ if(b.model!==undefined&&!modelChoices.some(model=>model.id===b.model))throw new Error('请选择可用的 MiniMax H3 视频模型。');
+ if(b.model===QUALITY_MODEL&&!validRate(b.confirmedRate))throw new Error('请先确认 MiniMax H3 Quality 的报价。');
  if(!b.audio)throw new Error('生成动画必须使用当前镜头已生成的配音。');
  decodeMedia(b.audio,'audio');
  if(!Array.isArray(b.characters)||!b.characters.every(c=>c&&typeof c.name==='string'&&c.name.trim()&&c.name.length<=80&&typeof c.image==='string'))throw new Error('人物参考数据无效。');
@@ -78,6 +96,7 @@ async function prepareAudioReference(source){
 }
 export function createVideoService(request=aiRequest,folder=directory,{audioInspector=inspectAudio,audioReference=prepareAudioReference,muxer=lockNarration,store,preflight=()=>mediaTool(process.env.FFMPEG_BIN||'ffmpeg',['-version'])}={}){
  const locks=new Map();
+ async function modelCatalog(){const data=await(await request('videos/models')).json();return data.data??[];}
  async function save(job){if(store)return store.write('videos/'+job.id+'.json',job);await mkdir(folder,{recursive:true});const dest=path.join(folder,job.id+'.json'),tmp=dest+'.tmp';await writeFile(tmp,JSON.stringify(job));await rename(tmp,dest);}
  async function load(id){if(store)return store.read('videos/'+id+'.json');try{return JSON.parse(await readFile(path.join(folder,id+'.json'),'utf8'));}catch{return null;}}
  async function upload({bytes,mime},purpose,filename){
@@ -91,14 +110,21 @@ export function createVideoService(request=aiRequest,folder=directory,{audioInsp
  function uploadImage(media){return upload(media,'vision','reference.'+(media.mime.endsWith('jpeg')?'jpg':media.mime.split('/')[1]));}
  async function submit(body){
   validateVideo(body);const id=body.requestId;
+  const model=body.model??FAST_MODEL;
   if(locks.has(id))return locks.get(id);
   const work=(async()=>{
    const existing=await load(id);if(existing)return existing;
-   const job={id,status:'submitting',createdAt:Date.now(),seconds:body.seconds,aspect:body.aspect,prompt:body.prompt,firstPrompt:body.firstPrompt,...(typeof body.projectId==='string'?{projectId:body.projectId}:{}),...(typeof body.shotId==='string'?{shotId:body.shotId}:{}),revision:typeof body.revision==='string'?body.revision:'initial'};
+   const job={id,model,status:'submitting',createdAt:Date.now(),seconds:body.seconds,aspect:body.aspect,prompt:body.prompt,firstPrompt:body.firstPrompt,...(typeof body.projectId==='string'?{projectId:body.projectId}:{}),...(typeof body.shotId==='string'?{shotId:body.shotId}:{}),revision:typeof body.revision==='string'?body.revision:'initial'};
    if(store){try{await store.write('videos/'+id+'.json',job,{create:true});}catch(e){if(e.code===412)return load(id);throw e;}}else await save(job);
    await mkdir(folder,{recursive:true});
    let posting=false;
    try{
+    if(model===QUALITY_MODEL){
+     const {rate,error}=modelAvailability(await modelCatalog(),model);
+     if(error||rate.currency!==body.confirmedRate.currency||Number(rate.per_second)!==Number(body.confirmedRate.per_second)){
+      throw Object.assign(new Error(error||'MiniMax H3 Quality 报价已变化，请重新确认后再生成。'),{code:'video_quote_changed'});
+     }
+    }
     const duration=await audioInspector(body.audio);
     if(Math.round(duration*1000)>body.seconds*1000)throw new Error(`配音长 ${duration.toFixed(3)} 秒，超过镜头 ${body.seconds} 秒。请延长镜头或拆分台词，避免被截断。`);
     await preflight();
@@ -111,7 +137,7 @@ export function createVideoService(request=aiRequest,folder=directory,{audioInsp
     job.pipelineVersion='voice-image-v3';
     if(body.continuity)job.continuity={...body.continuity};
     job.audioDuration=duration;job.referenceKey=body.referenceKey;job.referenceNames=body.characters.map(c=>c.name);
-    const payload={model:MODEL,prompt:videoPrompt(body),seconds:body.seconds,aspect_ratio:body.aspect};
+    const payload={model,prompt:videoPrompt(body),seconds:body.seconds,aspect_ratio:body.aspect};
     const images=[];const manifest=[];
     const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
     for(const [index,character] of body.characters.entries()){
@@ -135,7 +161,7 @@ export function createVideoService(request=aiRequest,folder=directory,{audioInsp
     const result=await(await request('videos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})).json();
     if(!/^video_[a-zA-Z0-9_-]+$/.test(result.id||''))throw new Error('未返回可用的视频任务 ID。');
     Object.assign(job,{upstreamId:result.id,status:result.status||'queued',cost:result.cost,currency:result.currency,lastPoll:0});
-   }catch(e){Object.assign(job,{status:posting&&!e.httpStatus?'submission_unknown':'failed',error:e.message});}
+   }catch(e){Object.assign(job,{status:posting&&!e.httpStatus?'submission_unknown':'failed',error:e.message,...(e.code==='video_quote_changed'?{errorCode:e.code}:{})});}
    await save(job);return job;
   })();locks.set(id,work);try{return await work;}finally{locks.delete(id);}
  }
@@ -187,11 +213,26 @@ export function createVideoService(request=aiRequest,folder=directory,{audioInsp
   })();locks.set(id,work);try{return await work;}finally{locks.delete(id);}
  }
 
- return {submit,get,restoreNarration,folder,async content(id){if(!store)return path.join(folder,id+'.mp4');const directory=await mkdtemp(path.join(tmpdir(),'director-playback-'));try{return await store.download('videos/'+id+'.mp4',path.join(directory,'video.mp4'));}catch(e){await rm(directory,{recursive:true,force:true});throw e;}},cloud:!!store,async config(){const [a,m]=await Promise.all([request('videos/acceptance'),request('videos/models')]);const acceptance=await a.json(),models=await m.json();return {accepted:acceptance.accepted,model:MODEL,pricing:models.data?.find(m=>m.id===MODEL)?.pricing??[]};}};
+ async function config({includeChoices=false}={}){
+  const [response,catalog]=await Promise.all([request('videos/acceptance'),modelCatalog()]);
+  const acceptance=await response.json();
+  if(includeChoices){
+   const choices=modelChoices.map(choice=>{
+    const {rate,error}=modelAvailability(catalog,choice.id);
+    return {...choice,rate,error};
+   });
+   return {accepted:acceptance.accepted,defaultModel:FAST_MODEL,choices};
+  }
+  const {pricing,error}=modelAvailability(catalog,FAST_MODEL);
+  if(error)throw new Error(error);
+  return {accepted:acceptance.accepted,model:FAST_MODEL,pricing};
+ }
+
+ return {submit,get,restoreNarration,folder,async content(id){if(!store)return path.join(folder,id+'.mp4');const directory=await mkdtemp(path.join(tmpdir(),'director-playback-'));try{return await store.download('videos/'+id+'.mp4',path.join(directory,'video.mp4'));}catch(e){await rm(directory,{recursive:true,force:true});throw e;}},cloud:!!store,config};
 }
 export function videoRouter(service=createVideoService(),{onSubmit}={}){
  const router=express.Router();
- router.get('/config',async(_req,res)=>{try{res.json(await service.config());}catch(e){res.status(502).json({error:e.message});}});
+ router.get('/config',async(req,res)=>{try{res.json(await service.config({includeChoices:req.query.choices==='1'}));}catch(e){res.status(502).json({error:e.message});}});
  router.post('/',async(req,res)=>{try{validateVideo(req.body);const job=await service.submit(req.body);if(onSubmit)await onSubmit(job);res.status(202).json(job);}catch(e){res.status(400).json({error:e.message});}});
  router.post('/:id/restore-narration',async(req,res)=>{if(!/^[-a-zA-Z0-9_]{16,80}$/.test(req.params.id))return res.sendStatus(404);try{res.json(await service.restoreNarration(req.params.id,req.body?.audio));}catch(e){res.status(400).json({error:e.message});}});
  const valid=id=>/^[-a-zA-Z0-9_]{16,80}$/.test(id);

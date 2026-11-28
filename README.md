@@ -82,7 +82,7 @@ Optional overrides are documented in [`.env.example`](.env.example):
 | `FFMPEG_BIN` | Path to `ffmpeg` for narration checks, speed adjustment, and final video audio |
 | `FFPROBE_BIN` | Path to `ffprobe` for video duration checks |
 
-The default text model is `deepseek-ai/deepseek-v4.1-flash-1017`; video generation uses `minimaxai/minimax-h3-fast` through the [ai& Videos API](https://docs.aiand.com/api/videos/).
+The default text model is `deepseek-ai/deepseek-v4.1-flash-1017`. Video generation defaults to MiniMax H3 Fast. The MV workspace also offers MiniMax H3 Quality with a price confirmation before each clip or batch. Available models must support audio and image references and have a 768p rate in the [ai& Videos API](https://docs.aiand.com/api/videos/).
 
 ### 3. Start the app
 

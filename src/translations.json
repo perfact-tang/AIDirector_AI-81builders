@@ -1303,6 +1303,86 @@
     "en": "MiniMax H3 is unavailable for this account.",
     "ja": "このアカウントでは MiniMax H3 を使用できません。"
   },
+  "ai& 当前未提供 MiniMax H3 Fast，视频生成暂不可用。": {
+    "en": "MiniMax H3 Fast is currently unavailable on ai&, so video generation is paused.",
+    "ja": "現在 ai& で MiniMax H3 Fast を利用できないため、動画生成を一時停止しています。"
+  },
+  "ai& 当前组织没有所选 MiniMax H3 型号的使用权限。": {
+    "en": "Your ai& organization does not have access to the selected MiniMax H3 model.",
+    "ja": "この ai& 組織には選択された MiniMax H3 モデルを使用する権限がありません。"
+  },
+  "ai& 当前的 MiniMax H3 Fast 暂不支持音频和图片参考。": {
+    "en": "MiniMax H3 Fast on ai& currently does not support audio and image references.",
+    "ja": "現在 ai& の MiniMax H3 Fast では音声と画像の参照を利用できません。"
+  },
+  "ai& 当前未提供 MiniMax H3 Fast 的 768p 报价。": {
+    "en": "ai& currently has no 768p rate for MiniMax H3 Fast.",
+    "ja": "MiniMax H3 Fast の 768p 料金は現在 ai& で提供されていません。"
+  },
+  "重新检查视频服务": {
+    "en": "Recheck video service",
+    "ja": "動画サービスを再確認"
+  },
+  "视频模型": {
+    "en": "Video model",
+    "ja": "動画モデル"
+  },
+  "暂不可用": {
+    "en": "Unavailable",
+    "ja": "利用不可"
+  },
+  "日元": {
+    "en": "JPY",
+    "ja": "円"
+  },
+  "确认使用高价模型？": {
+    "en": "Use the higher-priced model?",
+    "ja": "高価格のモデルを使用しますか？"
+  },
+  "确认并生成": {
+    "en": "Confirm and generate",
+    "ja": "確認して生成"
+  },
+  "{0} 是高价档，单价 {1} / 秒。": {
+    "en": "{0} is the higher-priced tier at {1} per second.",
+    "ja": "{0} は高価格のプランで、1 秒あたり {1} です。"
+  },
+  "本次生成 {0} 段，共 {1} 秒，预计 {2}。": {
+    "en": "{0} clip(s), {1} seconds total. Estimated cost {2}.",
+    "ja": "{0} 本、合計 {1} 秒。見込み料金は {2} です。"
+  },
+  "ai& 当前未提供所选的 MiniMax H3 型号。": {
+    "en": "The selected MiniMax H3 model is currently unavailable on ai&.",
+    "ja": "選択された MiniMax H3 モデルは現在 ai& で利用できません。"
+  },
+  "ai& 当前未提供 MiniMax H3 Fast。": {
+    "en": "MiniMax H3 Fast is currently unavailable on ai&.",
+    "ja": "現在 ai& で MiniMax H3 Fast は利用できません。"
+  },
+  "ai& 当前未提供 MiniMax H3 Quality。": {
+    "en": "MiniMax H3 Quality is currently unavailable on ai&.",
+    "ja": "現在 ai& で MiniMax H3 Quality は利用できません。"
+  },
+  "所选视频模型暂不支持音频和图片参考。": {
+    "en": "The selected video model currently does not support audio and image references.",
+    "ja": "選択された動画モデルでは現在、音声と画像の参照を利用できません。"
+  },
+  "ai& 当前未提供所选视频模型的 768p 报价。": {
+    "en": "ai& currently has no 768p rate for the selected video model.",
+    "ja": "選択された動画モデルの 768p 料金は現在 ai& で提供されていません。"
+  },
+  "请选择可用的 MiniMax H3 视频模型。": {
+    "en": "Choose an available MiniMax H3 video model.",
+    "ja": "利用可能な MiniMax H3 動画モデルを選択してください。"
+  },
+  "请先确认 MiniMax H3 Quality 的报价。": {
+    "en": "Confirm the MiniMax H3 Quality rate first.",
+    "ja": "先に MiniMax H3 Quality の料金を確認してください。"
+  },
+  "MiniMax H3 Quality 报价已变化，请重新确认后再生成。": {
+    "en": "The MiniMax H3 Quality rate changed. Confirm the new rate to generate.",
+    "ja": "MiniMax H3 Quality の料金が変わりました。新しい料金を確認してから生成してください。"
+  },
   "后端未配置 AIAND_API_KEY。": {
     "en": "AIAND_API_KEY is not configured on the backend.",
     "ja": "バックエンドに AIAND_API_KEY が設定されていません。"
